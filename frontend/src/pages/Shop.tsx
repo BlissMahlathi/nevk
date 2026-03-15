@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import Seo from "@/components/seo/Seo";
 import Layout from "@/components/store/Layout";
 import ProductCard from "@/components/store/ProductCard";
 import {
@@ -72,6 +73,12 @@ const Shop = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Shop"
+        description="Browse Nevk Cosmetics luxury collection: lip gloss, lip scrubs, lip liners, sunscreen, soaps, oils, and skincare products."
+        path="/shop"
+        keywords="shop cosmetics, lip gloss, lip scrub, lip liner, skincare products, South Africa cosmetics"
+      />
       <div className="pt-28 pb-8 section-padding">
         {/* Header */}
         <div className="text-center mb-12">

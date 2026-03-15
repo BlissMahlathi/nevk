@@ -1,10 +1,17 @@
 import { motion } from "framer-motion";
 import { Mail, MapPin, Clock } from "lucide-react";
+import Seo from "@/components/seo/Seo";
 import Layout from "@/components/store/Layout";
 
 const Contact = () => {
   return (
     <Layout>
+      <Seo
+        title="Contact"
+        description="Contact Nevk Cosmetics at nevkcosmetics@gmail.com. Visit us at 10 Bloekom Avenue, General Albertspark, Alberton. Open 24 hours."
+        path="/contact"
+        keywords="Nevk Cosmetics contact, beauty store Alberton, cosmetics support"
+      />
       <div className="pt-28">
         <section className="section-padding">
           <motion.div

@@ -1,0 +1,6 @@
+# Keep SEO assets and API-like files reachable directly.
+/sitemap.xml /sitemap.xml 200
+/robots.txt /robots.txt 200
+
+# SPA fallback for route sharing on Netlify.
+/* /index.html 200

@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import Seo from "@/components/seo/Seo";
 import Layout from "@/components/store/Layout";
 import ProductCard from "@/components/store/ProductCard";
 import { products as fallbackProducts } from "@/data/products";
@@ -79,6 +80,35 @@ const ProductDetails = () => {
 
   return (
     <Layout>
+      <Seo
+        title={product.name}
+        description={product.description}
+        path={`/product/${product.slug}`}
+        image={product.image}
+        type="product"
+        keywords={`${product.name}, ${product.category}, Nevk Cosmetics, luxury beauty`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description,
+          image: product.images,
+          brand: {
+            "@type": "Brand",
+            name: "Nevk Cosmetics",
+          },
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "ZAR",
+            price: product.price,
+            availability:
+              product.stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+            url: `https://nevk.netlify.app/product/${product.slug}`,
+          },
+        }}
+      />
       <div className="pt-28 section-padding">
         <Link
           to="/shop"

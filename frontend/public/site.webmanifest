@@ -1,0 +1,16 @@
+{
+  "name": "Nevk Cosmetics",
+  "short_name": "Nevk",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f1ea",
+  "theme_color": "#f6f1ea",
+  "description": "African-made luxury lip care and skincare for bold women.",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

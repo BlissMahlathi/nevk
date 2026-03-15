@@ -1,10 +1,17 @@
 import { motion } from "framer-motion";
+import Seo from "@/components/seo/Seo";
 import Layout from "@/components/store/Layout";
 import pic8 from "@/assets/pic8.png";
 
 const About = () => {
   return (
     <Layout>
+      <Seo
+        title="About Brand"
+        description="Learn the story behind Nevk Cosmetics, an African-made luxury beauty brand built for bold, unapologetic women who own their glow."
+        path="/about"
+        keywords="about Nevk Cosmetics, African-made beauty brand, luxury lip care"
+      />
       <div className="pt-28">
         {/* Hero */}
         <section className="section-padding text-center">
