@@ -1,66 +1,129 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
 
-:root {
-  --bg: #f7f6f2;
-  --bg-accent: #e6fff8;
-  --panel-bg: rgba(255, 255, 255, 0.88);
-  --panel-border: rgba(15, 23, 34, 0.1);
-  --panel-shadow: 0 20px 36px rgba(15, 23, 34, 0.08);
-  --field-bg: rgba(248, 250, 252, 0.95);
-  --field-border: rgba(15, 23, 34, 0.14);
-  --badge-bg: rgba(15, 23, 34, 0.08);
-  --text-main: #0f1722;
-  --text-soft: #516074;
-  --brand: #12d5ae;
-  --brand-strong: #028a6f;
-  --font-heading: "Fraunces", Georgia, serif;
-  --font-body: "Manrope", "Segoe UI", sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 97%;
+    --foreground: 0 0% 10%;
+
+    --card: 47 33% 93%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 40 33% 97%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 0 29% 74%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 47 33% 93%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 29% 74%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 40% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 29% 74%;
+
+    --radius: 0.375rem;
+
+    --sidebar-background: 40 33% 97%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 0 29% 74%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 47 33% 93%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 29% 74%;
+
+    /* Custom tokens */
+    --rose: 0 29% 74%;
+    --rose-light: 0 29% 88%;
+    --beige: 47 33% 93%;
+    --charcoal: 0 0% 10%;
+    --warm-white: 40 33% 97%;
+
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer components {
+  .heading-display {
+    font-family: var(--font-display);
+    @apply font-light tracking-wide;
+  }
 
-html,
-body,
-#root {
-  min-height: 100%;
-}
+  .heading-editorial {
+    font-family: var(--font-display);
+    @apply font-normal italic;
+  }
 
-body {
-  margin: 0;
-  color: var(--text-main);
-  font: 16px/1.55 var(--font-body);
-  background:
-    radial-gradient(circle at 12% 4%, var(--bg-accent) 0, transparent 42%),
-    radial-gradient(circle at 85% 6%, #ffe5d6 0, transparent 38%), var(--bg);
-}
+  .text-body {
+    font-family: var(--font-body);
+    @apply font-light tracking-wide text-sm leading-relaxed;
+  }
 
-#root {
-  width: min(1120px, 100%);
-  margin: 0 auto;
-}
+  .btn-rose {
+    @apply bg-primary text-primary-foreground px-8 py-3 text-xs font-medium uppercase tracking-[0.2em] transition-all duration-300;
+  }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-heading);
-  line-height: 1.12;
-  letter-spacing: -0.01em;
-}
+  .btn-rose:hover {
+    @apply opacity-90;
+  }
 
-h1 {
-  margin: 0;
-  font-size: clamp(2rem, 5vw, 3.6rem);
-}
+  .btn-ghost {
+    @apply bg-transparent border border-foreground text-foreground px-8 py-3 text-xs font-medium uppercase tracking-[0.2em] transition-all duration-300;
+  }
 
-h2,
-h3 {
-  margin: 0;
-}
+  .btn-ghost:hover {
+    @apply bg-foreground text-background;
+  }
 
-button,
-input,
-select {
-  color: inherit;
+  .divider-thin {
+    @apply w-12 h-px bg-primary mx-auto;
+  }
+
+  .product-card-surface {
+    @apply bg-card rounded-sm overflow-hidden transition-all duration-500;
+  }
+
+  .product-card-surface:hover {
+    @apply shadow-sm;
+  }
+
+  .nav-link {
+    font-family: var(--font-body);
+    @apply text-xs uppercase tracking-[0.15em] text-foreground/70 transition-colors duration-300;
+  }
+
+  .nav-link:hover {
+    @apply text-foreground;
+  }
+
+  .section-padding {
+    @apply px-6 py-20 md:px-12 lg:px-24 lg:py-28;
+  }
 }
