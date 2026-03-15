@@ -30,6 +30,7 @@ function App() {
   const [activeProductSlug, setActiveProductSlug] = useState("");
   const [activeProduct, setActiveProduct] = useState(null);
   const [activeLoading, setActiveLoading] = useState(false);
+  const [parallaxShift, setParallaxShift] = useState(0);
 
   const selectedCategoryLabel = useMemo(() => {
     if (selectedCategory === "all") return "All categories";
@@ -118,6 +119,48 @@ function App() {
     return () => controller.abort();
   }, [activeProductSlug]);
 
+  useEffect(() => {
+    let ticking = false;
+
+    const onScroll = () => {
+      if (ticking) return;
+
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const nextShift = Math.min(window.scrollY, 600);
+        setParallaxShift(nextShift);
+        ticking = false;
+      });
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const elements = document.querySelectorAll(".scroll-in");
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.14,
+        rootMargin: "0px 0px -6% 0px",
+      },
+    );
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [featuredProducts, products, page]);
+
   const onSearchSubmit = (event) => {
     event.preventDefault();
     setPage(1);
@@ -139,22 +182,27 @@ function App() {
   const hasFilters = selectedCategory !== "all" || query.length > 0;
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      style={{ "--parallax-shift": `${parallaxShift}px` }}
+    >
       <header className="hero-panel">
-        <p className="eyebrow">Nevk Cosmetics</p>
-        <h1>Shop intentional beauty essentials.</h1>
-        <p className="hero-copy">
+        <p className="eyebrow scroll-in parallax-text-fast">Nevk Cosmetics</p>
+        <h1 className="scroll-in parallax-text-slow">
+          Shop intentional beauty essentials.
+        </h1>
+        <p className="hero-copy scroll-in parallax-text-mid">
           Explore curated products with rich scents, clean formulas, and
           textures designed for everyday confidence.
         </p>
-        <div className="hero-meta">
+        <div className="hero-meta scroll-in parallax-text-fast">
           <span className="status-dot" aria-hidden="true"></span>
           <span>{healthMessage}</span>
         </div>
       </header>
 
       <section className="filters-panel">
-        <form className="search-form" onSubmit={onSearchSubmit}>
+        <form className="search-form scroll-in" onSubmit={onSearchSubmit}>
           <Search size={18} aria-hidden="true" />
           <input
             type="search"
@@ -166,7 +214,7 @@ function App() {
           <button type="submit">Search</button>
         </form>
 
-        <div className="controls-row">
+        <div className="controls-row scroll-in">
           <label>
             Category
             <select value={selectedCategory} onChange={onCategoryChange}>
@@ -191,7 +239,7 @@ function App() {
       </section>
 
       <section className="featured-panel">
-        <div className="section-title">
+        <div className="section-title scroll-in">
           <Sparkles size={16} aria-hidden="true" />
           <h2>Featured picks</h2>
         </div>
@@ -204,7 +252,7 @@ function App() {
               <button
                 key={item.id}
                 type="button"
-                className="featured-card"
+                className="featured-card scroll-in"
                 onClick={() => setActiveProductSlug(item.slug)}
               >
                 {item.primary_image ? (
@@ -229,7 +277,7 @@ function App() {
       </section>
 
       <section className="catalog-panel">
-        <div className="section-title">
+        <div className="section-title scroll-in">
           <h2>
             Catalog: <span>{selectedCategoryLabel}</span>
           </h2>
@@ -260,7 +308,7 @@ function App() {
             {products.map((item) => (
               <article key={item.id} className="product-card">
                 <button
-                  className="product-main"
+                  className="product-main scroll-in"
                   type="button"
                   onClick={() => setActiveProductSlug(item.slug)}
                 >
@@ -285,7 +333,7 @@ function App() {
           </div>
         ) : null}
 
-        <div className="pagination">
+        <div className="pagination scroll-in">
           <button
             type="button"
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}

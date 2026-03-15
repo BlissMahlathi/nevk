@@ -3,6 +3,7 @@
   display: grid;
   gap: 1rem;
   position: relative;
+  --parallax-shift: 0px;
 }
 
 .hero-panel,
@@ -26,6 +27,25 @@
 
 .hero-panel {
   padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-panel::after {
+  content: "";
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  width: 110px;
+  height: 110px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(18, 213, 174, 0.34),
+    transparent 70%
+  );
+  transform: translate3d(0, calc(var(--parallax-shift) * -0.1), 0);
+  pointer-events: none;
 }
 
 .eyebrow {
@@ -38,6 +58,18 @@
 
 .hero-copy {
   max-width: 58ch;
+}
+
+.parallax-text-slow {
+  --parallax-local: calc(var(--parallax-shift) * -0.18);
+}
+
+.parallax-text-mid {
+  --parallax-local: calc(var(--parallax-shift) * -0.1);
+}
+
+.parallax-text-fast {
+  --parallax-local: calc(var(--parallax-shift) * -0.06);
 }
 
 .hero-meta {
@@ -145,6 +177,12 @@
   color: var(--text-main);
   padding: 0.4rem 0.7rem;
   cursor: pointer;
+}
+
+.featured-card img,
+.product-main img {
+  transform: translate3d(0, calc(var(--parallax-shift) * -0.025), 0);
+  transition: transform 280ms ease;
 }
 
 .ghost-button:disabled {
@@ -334,6 +372,28 @@
   color: var(--text-soft);
 }
 
+.scroll-in {
+  --scroll-enter-y: 24px;
+  --parallax-local: 0px;
+  --scroll-scale: 0.98;
+  opacity: 0;
+  transform: translate3d(
+      0,
+      calc(var(--scroll-enter-y) + var(--parallax-local)),
+      0
+    )
+    scale(var(--scroll-scale));
+  transition:
+    opacity 540ms ease,
+    transform 540ms cubic-bezier(0.2, 0.7, 0.18, 1);
+}
+
+.scroll-in.is-visible {
+  --scroll-enter-y: 0px;
+  --scroll-scale: 1;
+  opacity: 1;
+}
+
 @keyframes reveal {
   from {
     opacity: 0;
@@ -361,5 +421,19 @@
   .featured-panel,
   .catalog-panel {
     grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-in,
+  .scroll-in.is-visible,
+  .parallax-text-slow,
+  .parallax-text-mid,
+  .parallax-text-fast,
+  .featured-card img,
+  .product-main img,
+  .hero-panel::after {
+    transition: none;
+    transform: none;
   }
 }
