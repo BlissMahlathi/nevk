@@ -1,0 +1,18 @@
+#site-name.nevk-admin-branding {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nevk-admin-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 2px;
+}
+
+#site-name.nevk-admin-branding a {
+  letter-spacing: 0.04em;
+}

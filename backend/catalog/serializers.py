@@ -30,6 +30,9 @@ class CategorySerializer(serializers.ModelSerializer):
                   "is_active", "product_count"]
 
     def get_product_count(self, obj):
+        annotated_count = getattr(obj, "product_count", None)
+        if annotated_count is not None:
+            return annotated_count
         return obj.products.filter(is_active=True).count()
 
 

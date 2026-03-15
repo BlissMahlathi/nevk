@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Search, ShoppingBag, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 
 const navLinks = [
   { label: "Home", path: "/" },
@@ -44,7 +44,13 @@ const Header = () => {
 
         {/* Logo */}
         <Link to="/" className="absolute left-1/2 -translate-x-1/2">
-          <img src={logo} alt="Nevk Cosmetics" className="h-12 md:h-14 w-auto" />
+          <img
+            src={logo}
+            alt="Nevk Cosmetics"
+            className="h-12 md:h-14 w-auto"
+            loading="eager"
+            decoding="async"
+          />
         </Link>
 
         {/* Icons */}

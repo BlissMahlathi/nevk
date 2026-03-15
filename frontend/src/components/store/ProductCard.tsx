@@ -28,6 +28,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               alt={product.name}
               className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
+              decoding="async"
             />
           </div>
 

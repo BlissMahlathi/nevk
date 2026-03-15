@@ -1,6 +1,7 @@
-from django.db.models import Q
+from django.db.models import Count, Q
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 
 from .models import Category, Product
 from .serializers import (
@@ -20,9 +21,14 @@ class StandardPagination(PageNumberPagination):
 class CategoryListView(ListAPIView):
     """GET /api/catalog/categories/ — returns all active categories with product counts."""
     serializer_class = CategorySerializer
+    pagination_class = None
+    permission_classes = [AllowAny]
+    throttle_scope = "catalog"
 
     def get_queryset(self):
-        return Category.objects.filter(is_active=True)
+        return Category.objects.filter(is_active=True).annotate(
+            product_count=Count("products", filter=Q(products__is_active=True))
+        ).order_by("name")
 
 
 class ProductListView(ListAPIView):
@@ -35,6 +41,8 @@ class ProductListView(ListAPIView):
     """
     serializer_class = ProductListSerializer
     pagination_class = StandardPagination
+    permission_classes = [AllowAny]
+    throttle_scope = "catalog"
 
     def get_queryset(self):
         qs = (
@@ -68,6 +76,8 @@ class ProductDetailView(RetrieveAPIView):
     """GET /api/catalog/products/<slug>/ — full product detail."""
     serializer_class = ProductDetailSerializer
     lookup_field = "slug"
+    permission_classes = [AllowAny]
+    throttle_scope = "catalog"
 
     def get_queryset(self):
         return (
@@ -81,6 +91,8 @@ class ProductDetailView(RetrieveAPIView):
 class FeaturedProductListView(ListAPIView):
     """GET /api/catalog/products/featured/ — up to 8 featured products, no pagination."""
     serializer_class = ProductListSerializer
+    permission_classes = [AllowAny]
+    throttle_scope = "catalog"
 
     def get_queryset(self):
         return (

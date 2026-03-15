@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import lipgloss from "@/assets/lipgloss.png";
+import lipgloss from "@/assets/lipgloss.webp";
 
 const PromoStrip = () => {
   return (
@@ -19,6 +19,7 @@ const PromoStrip = () => {
             alt="Nevk Lip Gloss Collection"
             className="w-full h-full object-cover min-h-[40vh]"
             loading="lazy"
+            decoding="async"
           />
         </motion.div>
 

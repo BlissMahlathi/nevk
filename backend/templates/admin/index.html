@@ -1,0 +1,445 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log %}
+
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
+<style>
+/* ── Nevk Dashboard ───────────────────────────────────────────────────── */
+.nevk-dash-section {
+  margin: 20px 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: #999;
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 6px;
+}
+
+/* Stat cards */
+.nevk-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 12px 0 24px;
+}
+.nevk-stat-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  position: relative;
+  overflow: hidden;
+}
+.nevk-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.nevk-stat-card.c-blue::before   { background: #417690; }
+.nevk-stat-card.c-green::before  { background: #28a745; }
+.nevk-stat-card.c-orange::before { background: #fd7e14; }
+.nevk-stat-card.c-red::before    { background: #dc3545; }
+.nevk-stat-card.c-purple::before { background: #6f42c1; }
+.nevk-stat-card.c-teal::before   { background: #20c997; }
+.nevk-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: #999;
+  margin: 0 0 5px;
+}
+.nevk-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #222;
+  line-height: 1;
+  margin: 0;
+}
+.nevk-stat-sub {
+  font-size: 11px;
+  color: #aaa;
+  margin: 5px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chart grid */
+.nevk-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 1000px) {
+  .nevk-chart-grid { grid-template-columns: 1fr; }
+}
+.nevk-chart-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+.nevk-chart-card h3 {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: #888;
+}
+.nevk-chart-wrap {
+  position: relative;
+  height: 210px;
+}
+
+/* App list section */
+.nevk-app-section { margin-top: 28px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+  {# ── STAT CARDS ─────────────────────────────────────────────────────── #}
+  <p class="nevk-dash-section">{% trans "Store overview" %}</p>
+
+  <div class="nevk-stat-grid">
+    <div class="nevk-stat-card c-blue">
+      <p class="nevk-stat-label">{% trans "Active Products" %}</p>
+      <p class="nevk-stat-value">{{ dash_total_products }}</p>
+      <p class="nevk-stat-sub">{{ dash_featured }} {% trans "featured" %}</p>
+    </div>
+
+    <div class="nevk-stat-card c-orange">
+      <p class="nevk-stat-label">{% trans "Low Stock" %}</p>
+      <p class="nevk-stat-value">{{ dash_low_stock }}</p>
+      <p class="nevk-stat-sub">{{ dash_out_of_stock }} {% trans "out of stock" %}</p>
+    </div>
+
+    <div class="nevk-stat-card c-teal">
+      <p class="nevk-stat-label">{% trans "Categories" %}</p>
+      <p class="nevk-stat-value">{{ dash_total_categories }}</p>
+      <p class="nevk-stat-sub">&nbsp;</p>
+    </div>
+
+    <div class="nevk-stat-card c-purple">
+      <p class="nevk-stat-label">{% trans "Orders Today" %}</p>
+      <p class="nevk-stat-value">{{ dash_todays_orders }}</p>
+      <p class="nevk-stat-sub">{{ dash_total_orders }} {% trans "total" %}</p>
+    </div>
+
+    <div class="nevk-stat-card c-red">
+      <p class="nevk-stat-label">{% trans "Pending Orders" %}</p>
+      <p class="nevk-stat-value">{{ dash_pending_orders }}</p>
+      <p class="nevk-stat-sub">{% trans "need action" %}</p>
+    </div>
+
+    <div class="nevk-stat-card c-green">
+      <p class="nevk-stat-label">{% trans "Confirmed Revenue" %}</p>
+      <p class="nevk-stat-value">R&nbsp;{{ dash_total_revenue|floatformat:0 }}</p>
+      <p class="nevk-stat-sub">{{ dash_confirmed_orders }} {% trans "orders" %}</p>
+    </div>
+  </div>
+
+  {# ── CHARTS ROW 1 ────────────────────────────────────────────────────── #}
+  <p class="nevk-dash-section">{% trans "Analytics" %}</p>
+
+  <div class="nevk-chart-grid">
+    <div class="nevk-chart-card">
+      <h3>{% trans "Revenue — Last 7 Days (R)" %}</h3>
+      <div class="nevk-chart-wrap">
+        <canvas id="chart-revenue" aria-label="{% trans 'Revenue last 7 days' %}" role="img"></canvas>
+      </div>
+    </div>
+
+    <div class="nevk-chart-card">
+      <h3>{% trans "Orders by Status" %}</h3>
+      <div class="nevk-chart-wrap">
+        <canvas id="chart-status" aria-label="{% trans 'Orders by status' %}" role="img"></canvas>
+      </div>
+    </div>
+  </div>
+
+  {# ── CHARTS ROW 2 ────────────────────────────────────────────────────── #}
+  <div class="nevk-chart-grid">
+    <div class="nevk-chart-card">
+      <h3>{% trans "Active Products per Category" %}</h3>
+      <div class="nevk-chart-wrap">
+        <canvas id="chart-categories" aria-label="{% trans 'Products per category' %}" role="img"></canvas>
+      </div>
+    </div>
+
+    <div class="nevk-chart-card">
+      <h3>{% trans "Orders — Last 14 Days" %}</h3>
+      <div class="nevk-chart-wrap">
+        <canvas id="chart-orders-trend" aria-label="{% trans 'Orders last 14 days' %}" role="img"></canvas>
+      </div>
+    </div>
+  </div>
+
+  {# ── STANDARD APP LIST ────────────────────────────────────────────────── #}
+  <div class="nevk-app-section">
+    <p class="nevk-dash-section">{% trans "Applications" %}</p>
+
+    {% if app_list %}
+      {% for app in app_list %}
+      <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|slice:":"|add:request.path %} current-app{% endif %}">
+        <table>
+          <caption>
+            <a href="{{ app.app_url }}" class="section"
+               title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">
+              {{ app.name }}
+            </a>
+          </caption>
+          {% for model in app.models %}
+          <tr class="model-{{ model.object_name|lower }}">
+            {% if model.admin_url %}
+            <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+            {% else %}
+            <th scope="row">{{ model.name }}</th>
+            {% endif %}
+            <td>
+              {% if model.add_url %}
+              <a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>
+              {% endif %}
+              {% if model.admin_url %}
+              <a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p>{% trans "You don't have permission to view or edit anything." %}</p>
+    {% endif %}
+  </div>
+
+</div>{# end #content-main #}
+
+{# ── JSON data payloads (XSS-safe via json_script) ──────────────────────── #}
+{{ dash_revenue_labels|json_script:"d-rl" }}
+{{ dash_revenue_data|json_script:"d-rd" }}
+{{ dash_order_status_labels|json_script:"d-osl" }}
+{{ dash_order_status_data|json_script:"d-osd" }}
+{{ dash_cat_labels|json_script:"d-cl" }}
+{{ dash_cat_data|json_script:"d-cd" }}
+{{ dash_orders_trend_labels|json_script:"d-otl" }}
+{{ dash_orders_trend_data|json_script:"d-otd" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  function jd(id) {
+    var el = document.getElementById(id);
+    return el ? JSON.parse(el.textContent) : [];
+  }
+
+  var rl  = jd("d-rl");   // revenue labels
+  var rd  = jd("d-rd");   // revenue data
+  var osl = jd("d-osl");  // order-status labels
+  var osd = jd("d-osd");  // order-status data
+  var cl  = jd("d-cl");   // category labels
+  var cd  = jd("d-cd");   // category data
+  var otl = jd("d-otl");  // orders-trend labels
+  var otd = jd("d-otd");  // orders-trend data
+
+  Chart.defaults.font.family = '"Roboto", "Helvetica Neue", Arial, sans-serif';
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = "#666";
+
+  // 1 — Revenue last 7 days (bar) ─────────────────────────────────────────
+  new Chart(document.getElementById("chart-revenue"), {
+    type: "bar",
+    data: {
+      labels: rl,
+      datasets: [{
+        label: "Revenue (R)",
+        data: rd,
+        backgroundColor: "rgba(65, 118, 144, 0.80)",
+        borderColor: "#417690",
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return " R " + ctx.parsed.y.toLocaleString("en-ZA", {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
+              });
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(0,0,0,.05)" },
+          ticks: {
+            callback: function(v) {
+              return "R " + (v >= 1000 ? (v / 1000).toFixed(0) + "k" : v);
+            }
+          }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // 2 — Orders by status (doughnut) ───────────────────────────────────────
+  new Chart(document.getElementById("chart-status"), {
+    type: "doughnut",
+    data: {
+      labels: osl,
+      datasets: [{
+        data: osd,
+        backgroundColor: ["#ffc107", "#17a2b8", "#28a745", "#dc3545"],
+        borderColor: "#fff",
+        borderWidth: 3,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "62%",
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { padding: 14, usePointStyle: true, pointStyleWidth: 10 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+              var pct = total ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+              return " " + ctx.label + ": " + ctx.parsed + " (" + pct + "%)";
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 3 — Products per category (horizontal bar) ────────────────────────────
+  new Chart(document.getElementById("chart-categories"), {
+    type: "bar",
+    data: {
+      labels: cl,
+      datasets: [{
+        label: "Products",
+        data: cd,
+        backgroundColor: "rgba(111, 66, 193, 0.75)",
+        borderColor: "#6f42c1",
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: "rgba(0,0,0,.05)" },
+          ticks: { precision: 0 }
+        },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // 4 — Orders trend last 14 days (line) ──────────────────────────────────
+  new Chart(document.getElementById("chart-orders-trend"), {
+    type: "line",
+    data: {
+      labels: otl,
+      datasets: [{
+        label: "Orders",
+        data: otd,
+        borderColor: "#20c997",
+        backgroundColor: "rgba(32, 201, 151, 0.12)",
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: "#20c997",
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(0,0,0,.05)" },
+          ticks: { precision: 0 }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}());
+</script>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+  <div class="module" id="recent-actions-module">
+    <h2>{% trans "Recent actions" %}</h2>
+    <h3>{% trans "My actions" %}</h3>
+    {% get_admin_log 10 as admin_log for_user user %}
+    {% if not admin_log %}
+    <p>{% trans "None" %}</p>
+    {% else %}
+    <ul class="actionlist">
+      {% for entry in admin_log %}
+      <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+        {% if entry.is_deletion or not entry.get_admin_url %}
+        {{ entry.object_repr }}
+        {% else %}
+        <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+        {% endif %}
+        <br>
+        {% if entry.is_deletion %}
+        <span class="mini quiet">{{ entry.content_type }}</span>
+        {% else %}
+        <span class="mini quiet">
+          <a href="{% url 'admin:app_list' app_label=entry.content_type.app_label %}">
+            {{ entry.content_type }}
+          </a>
+        </span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

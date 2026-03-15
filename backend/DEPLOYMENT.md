@@ -19,6 +19,8 @@
 - Run `collectstatic`.
 - Configure Gunicorn as the app server.
 - Configure Nginx for TLS termination and reverse proxy.
+- Confirm API throttling/permissions defaults in Django REST Framework are active.
+- Confirm WhiteNoise compressed static files are enabled after `collectstatic`.
 
 ## 2. Example Environment File
 
@@ -108,12 +110,41 @@ server {
     listen 80;
     server_name your-domain.com www.your-domain.com;
 
+    # Enable response compression for API and text responses.
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        application/json
+        application/javascript
+        application/xml
+        image/svg+xml;
+
+    # Optional: Brotli if nginx-brotli module is available.
+    # brotli on;
+    # brotli_comp_level 5;
+    # brotli_types text/plain text/css application/json application/javascript application/xml image/svg+xml;
+
     location /static/ {
         alias /home/hlulani/projectFolder/Nevk/backend/staticfiles/;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
     }
 
     location /media/ {
         alias /home/hlulani/projectFolder/Nevk/backend/media/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+
+    location /api/ {
+        include proxy_params;
+        proxy_pass http://unix:/run/nevk-gunicorn.sock;
+        add_header Vary "Accept-Encoding, Origin" always;
     }
 
     location / {
@@ -147,3 +178,5 @@ sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 - Product catalog APIs return data.
 - `POST /api/orders/whatsapp/` creates an `Order` and `OrderItem` records and returns `whatsapp_url`.
 - Nginx serves `/static/` and `/media/` correctly.
+- API responses include expected `Cache-Control` and `Vary` headers.
+- Netlify static assets are served with long-lived cache headers from `frontend/public/_headers`.

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import Seo from "@/components/seo/Seo";
 import Layout from "@/components/store/Layout";
-import pic8 from "@/assets/pic8.png";
+import pic8 from "@/assets/pic8.webp";
 
 const About = () => {
   return (
@@ -40,7 +40,13 @@ const About = () => {
               transition={{ duration: 0.7 }}
             >
               <div className="aspect-[4/5] rounded-sm overflow-hidden">
-                <img src={pic8} alt="Nevk Cosmetics collection" className="w-full h-full object-cover" />
+                <img
+                  src={pic8}
+                  alt="Nevk Cosmetics collection"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
             </motion.div>
 

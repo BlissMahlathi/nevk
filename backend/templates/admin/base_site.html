@@ -1,17 +1,14 @@
-{% extends "admin/base_site.html" %} {% load static %} {% block branding %}
-<h1 id="site-name" style="display: flex; align-items: center; gap: 10px">
-  <img
-    src="{% static 'core/logo.png' %}"
-    alt="Nevk logo"
-    style="
-      width: 30px;
-      height: 30px;
-      object-fit: contain;
-      border-radius: 6px;
-      background: #fff;
-      padding: 2px;
-    "
-  />
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'core/admin-branding.css' %}" />
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name" class="nevk-admin-branding">
+  <img src="{% static 'core/logo.png' %}" alt="Nevk logo" class="nevk-admin-logo" />
   <a href="{% url 'admin:index' %}">Nevk Cosmetics Admin</a>
 </h1>
 {% endblock %}

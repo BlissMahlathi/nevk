@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
 
+from .image_processing import build_processed_product_image
+
 
 class Category(models.Model):
     name = models.CharField(max_length=120, unique=True)
@@ -77,6 +79,35 @@ class ProductImage(models.Model):
     class Meta:
         ordering = ["-is_primary", "created_at"]
 
+    def save(self, *args, **kwargs):
+        previous_original_name = None
+        if self.pk:
+            previous_original_name = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values_list("original_image", flat=True)
+                .first()
+            )
+
+        original_changed = previous_original_name != self.original_image.name
+        should_generate_processed = bool(self.original_image) and (
+            not self.processed_image or original_changed
+        )
+
+        super().save(*args, **kwargs)
+
+        if should_generate_processed:
+            self.regenerate_processed_image()
+
+    def regenerate_processed_image(self):
+        if not self.original_image:
+            return
+        processed_name, processed_file = build_processed_product_image(
+            self.original_image
+        )
+        self.processed_image.save(processed_name, processed_file, save=False)
+        super().save(update_fields=["processed_image"])
+
     @property
     def display_image(self):
         """Return processed image if available, fall back to original."""
@@ -84,7 +115,4 @@ class ProductImage(models.Model):
 
     def __str__(self):
         label = "Primary" if self.is_primary else "Image"
-        return f"{self.product.name} – {label}"
-
-    def __str__(self):
-        return f"{self.product.name} image"
+        return f"{self.product.name} {label}"
