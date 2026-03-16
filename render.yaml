@@ -2,15 +2,14 @@ services:
   - type: web
     name: nevk-backend
     env: python
-    rootDir: backend
     plan: free
-    buildCommand: cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput
-    preDeployCommand: cd backend && python manage.py migrate --noinput
-    startCommand: cd backend && gunicorn config.wsgi:application
+    buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput
+    preDeployCommand: python backend/manage.py migrate --noinput
+    startCommand: gunicorn --chdir backend config.wsgi:application
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.3
+        value: "3.12"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
