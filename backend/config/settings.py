@@ -18,9 +18,9 @@ SECRET_KEY = config(
     "SECRET_KEY",
     default="django-insecure-ne#@3*45j9r=60nl_5df#2g04p(n)9c$8avadib2_h6*v#cd=m",
 )
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+    "ALLOWED_HOSTS", default="nevk.onrender.com,", cast=Csv())
 
 # Admin hardening: use a non-default path and optionally restrict by host/IP.
 ADMIN_URL = config("ADMIN_URL", default="admin/").strip("/") + "/"
