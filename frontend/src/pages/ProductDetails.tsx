@@ -6,13 +6,19 @@ import Seo from "@/components/seo/Seo";
 import Layout from "@/components/store/Layout";
 import ProductCard from "@/components/store/ProductCard";
 import { products as fallbackProducts } from "@/data/products";
-import { useProductDetailQuery, useProductsQuery } from "@/hooks/useCatalog";
+import {
+  USE_FALLBACK_CATALOG,
+  useProductDetailQuery,
+  useProductsQuery,
+} from "@/hooks/useCatalog";
 import { useCart } from "@/context/CartContext";
 
 const ProductDetails = () => {
   const { slug } = useParams();
-  const fallbackProduct = fallbackProducts.find((p) => p.slug === slug);
-  const { data: apiProduct, isLoading } = useProductDetailQuery(slug);
+  const fallbackProduct = USE_FALLBACK_CATALOG
+    ? fallbackProducts.find((p) => p.slug === slug)
+    : undefined;
+  const { data: apiProduct, isLoading, error } = useProductDetailQuery(slug);
   const product = apiProduct || fallbackProduct;
 
   const { data: relatedFromApi } = useProductsQuery(
@@ -43,8 +49,13 @@ const ProductDetails = () => {
       <Layout>
         <div className="pt-32 section-padding text-center">
           <h1 className="heading-display text-3xl text-foreground mb-4">
-            Product Not Found
+            {error ? "Product could not be loaded" : "Product Not Found"}
           </h1>
+          {error && (
+            <p className="text-body text-red-600 mb-5">
+              Could not fetch product, we are working on it
+            </p>
+          )}
           <Link to="/shop" className="btn-ghost inline-block">
             Back to Shop
           </Link>

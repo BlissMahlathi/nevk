@@ -1,0 +1,25 @@
+# Example Nginx snippet for locked-down Django admin.
+# Replace the path and IPs with your real values.
+
+# Hide default Django admin path
+location = /admin { return 404; }
+location ^~ /admin/ { return 404; }
+
+# Locked-down admin endpoint (must match Django ADMIN_URL)
+location ^~ /secure-admin-7f4k9p/ {
+    # Allowlist trusted network egress IPs only
+    allow 203.0.113.10;
+    allow 198.51.100.0/24;
+    deny all;
+
+    # Basic Auth edge protection
+    auth_basic "Restricted Admin";
+    auth_basic_user_file /etc/nginx/.htpasswd-nevk-admin;
+
+    include proxy_params;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_pass http://unix:/run/nevk-gunicorn.sock;
+
+    add_header Cache-Control "no-store" always;
+}

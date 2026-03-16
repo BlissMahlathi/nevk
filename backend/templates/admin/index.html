@@ -106,6 +106,136 @@
 
 /* App list section */
 .nevk-app-section { margin-top: 28px; }
+.nevk-app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+.nevk-app-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+.nevk-app-card h3 {
+  margin: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+  font-size: 13px;
+}
+.nevk-model-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 10px;
+}
+.nevk-model-item {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.nevk-model-item:last-child { margin-bottom: 0; }
+.nevk-model-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+.nevk-model-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #417690;
+  flex: 0 0 auto;
+}
+.nevk-model-icon.auth { background: #0f7b9f; }
+.nevk-model-icon.catalog { background: #6f42c1; }
+.nevk-model-icon.core { background: #198754; }
+.nevk-model-name {
+  line-height: 1.1;
+}
+.nevk-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nevk-action-btn {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.nevk-action-btn.create {
+  background: #eaf6ec;
+  color: #1f7a33;
+  border: 1px solid #b5e0bd;
+}
+.nevk-action-btn.manage {
+  background: #e8f3f8;
+  color: #175c79;
+  border: 1px solid #b6d9e8;
+}
+.nevk-action-hint {
+  display: block;
+  font-size: 11px;
+  color: #8a8a8a;
+  margin-top: 6px;
+}
+.nevk-shortcuts {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nevk-shortcut-chip {
+  display: inline-block;
+  border: 1px solid #dfdfdf;
+  background: #f8f8f8;
+  color: #555;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  padding: 5px 8px;
+}
+.nevk-shortcut-chip:hover {
+  border-color: #c9c9c9;
+  background: #f1f1f1;
+}
+
+/* Recent actions */
+.nevk-recent-title {
+  font-size: 15px;
+  margin: 0 0 2px;
+}
+.nevk-recent-subtitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #888;
+}
+.nevk-action-object {
+  font-weight: 600;
+  color: #222;
+}
+.nevk-action-meta {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #8c8c8c;
+}
 </style>
 {% endblock %}
 
@@ -189,40 +319,94 @@
     </div>
   </div>
 
-  {# ── STANDARD APP LIST ────────────────────────────────────────────────── #}
+  {# ── USER-FRIENDLY APP ACTIONS ────────────────────────────────────────── #}
   <div class="nevk-app-section">
     <p class="nevk-dash-section">{% trans "Applications" %}</p>
 
     {% if app_list %}
-      {% for app in app_list %}
-      <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|slice:":"|add:request.path %} current-app{% endif %}">
-        <table>
-          <caption>
+      <div class="nevk-app-grid">
+        {% for app in app_list %}
+        <section class="nevk-app-card app-{{ app.app_label }} module">
+          <h3>
             <a href="{{ app.app_url }}" class="section"
                title="{% blocktrans with name=app.name %}Models in the {{ name }} application{% endblocktrans %}">
               {{ app.name }}
             </a>
-          </caption>
-          {% for model in app.models %}
-          <tr class="model-{{ model.object_name|lower }}">
-            {% if model.admin_url %}
-            <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
-            {% else %}
-            <th scope="row">{{ model.name }}</th>
-            {% endif %}
-            <td>
-              {% if model.add_url %}
-              <a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>
-              {% endif %}
+          </h3>
+
+          <ul class="nevk-model-list">
+            {% for model in app.models %}
+            <li class="nevk-model-item model-{{ model.object_name|lower }}">
               {% if model.admin_url %}
-              <a href="{{ model.admin_url }}" class="changelink">{% trans 'Change' %}</a>
+              <a class="nevk-model-title" href="{{ model.admin_url }}">
+                <span class="nevk-model-icon {{ app.app_label }}">
+                  {% if model.object_name == 'Group' %}G
+                  {% elif model.object_name == 'User' %}U
+                  {% elif model.object_name == 'Category' %}C
+                  {% elif model.object_name == 'ProductImage' %}PI
+                  {% elif model.object_name == 'Product' %}P
+                  {% elif model.object_name == 'OrderItem' %}OI
+                  {% elif model.object_name == 'Order' %}O
+                  {% else %}M
+                  {% endif %}
+                </span>
+                <span class="nevk-model-name">{{ model.name }}</span>
+              </a>
+              {% else %}
+              <span class="nevk-model-title">
+                <span class="nevk-model-icon {{ app.app_label }}">M</span>
+                <span class="nevk-model-name">{{ model.name }}</span>
+              </span>
               {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </table>
+
+              <div class="nevk-model-actions">
+                {% if model.add_url %}
+                <a href="{{ model.add_url }}" class="nevk-action-btn create">{% trans 'Create new' %}</a>
+                {% endif %}
+
+                {% if model.admin_url %}
+                <a href="{{ model.admin_url }}" class="nevk-action-btn manage">{% trans 'Manage records' %}</a>
+                <span class="nevk-action-hint">{% trans 'Use Manage to view, edit, update, and delete items.' %}</span>
+
+                <div class="nevk-shortcuts">
+                  {% if app.app_label == 'auth' and model.object_name == 'User' %}
+                  <a href="{{ model.admin_url }}?is_active__exact=1" class="nevk-shortcut-chip">{% trans 'Active users' %}</a>
+                  <a href="{{ model.admin_url }}?is_staff__exact=1" class="nevk-shortcut-chip">{% trans 'Staff users' %}</a>
+                  {% endif %}
+
+                  {% if app.app_label == 'catalog' and model.object_name == 'Category' %}
+                  <a href="{{ model.admin_url }}?is_active__exact=1" class="nevk-shortcut-chip">{% trans 'Active categories' %}</a>
+                  <a href="{{ model.admin_url }}?is_active__exact=0" class="nevk-shortcut-chip">{% trans 'Inactive categories' %}</a>
+                  {% endif %}
+
+                  {% if app.app_label == 'catalog' and model.object_name == 'ProductImage' %}
+                  <a href="{{ model.admin_url }}?is_primary__exact=1" class="nevk-shortcut-chip">{% trans 'Primary images' %}</a>
+                  {% endif %}
+
+                  {% if app.app_label == 'catalog' and model.object_name == 'Product' %}
+                  <a href="{{ model.admin_url }}?inventory=low" class="nevk-shortcut-chip">{% trans 'Low stock' %}</a>
+                  <a href="{{ model.admin_url }}?inventory=out" class="nevk-shortcut-chip">{% trans 'Out of stock' %}</a>
+                  <a href="{{ model.admin_url }}?is_featured__exact=1" class="nevk-shortcut-chip">{% trans 'Featured' %}</a>
+                  {% endif %}
+
+                  {% if app.app_label == 'core' and model.object_name == 'Order' %}
+                  <a href="{{ model.admin_url }}?status__exact=pending" class="nevk-shortcut-chip">{% trans 'Pending orders' %}</a>
+                  <a href="{{ model.admin_url }}?status__exact=confirmed" class="nevk-shortcut-chip">{% trans 'Confirmed orders' %}</a>
+                  <a href="{{ model.admin_url }}?status__exact=cancelled" class="nevk-shortcut-chip">{% trans 'Cancelled orders' %}</a>
+                  {% endif %}
+
+                  {% if app.app_label == 'core' and model.object_name == 'OrderItem' %}
+                  <a href="{{ model.admin_url }}?order__status__exact=pending" class="nevk-shortcut-chip">{% trans 'Pending order items' %}</a>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% endfor %}
       </div>
-      {% endfor %}
     {% else %}
       <p>{% trans "You don't have permission to view or edit anything." %}</p>
     {% endif %}
@@ -412,8 +596,8 @@
 {% block sidebar %}
 <div id="content-related">
   <div class="module" id="recent-actions-module">
-    <h2>{% trans "Recent actions" %}</h2>
-    <h3>{% trans "My actions" %}</h3>
+    <h2 class="nevk-recent-title">{% trans "Recent actions" %}</h2>
+    <p class="nevk-recent-subtitle">{% trans "My latest changes" %}</p>
     {% get_admin_log 10 as admin_log for_user user %}
     {% if not admin_log %}
     <p>{% trans "None" %}</p>
@@ -421,18 +605,26 @@
     <ul class="actionlist">
       {% for entry in admin_log %}
       <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+        {% if entry.is_addition %}
+        <strong>{% trans "Added" %}:</strong>
+        {% elif entry.is_change %}
+        <strong>{% trans "Updated" %}:</strong>
+        {% elif entry.is_deletion %}
+        <strong>{% trans "Deleted" %}:</strong>
+        {% endif %}
+
         {% if entry.is_deletion or not entry.get_admin_url %}
-        {{ entry.object_repr }}
+        <span class="nevk-action-object">{{ entry.object_repr }}</span>
         {% else %}
-        <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+        <a href="{{ entry.get_admin_url }}" class="nevk-action-object">{{ entry.object_repr }}</a>
         {% endif %}
         <br>
         {% if entry.is_deletion %}
-        <span class="mini quiet">{{ entry.content_type }}</span>
+        <span class="nevk-action-meta">{{ entry.content_type|capfirst }}</span>
         {% else %}
-        <span class="mini quiet">
+        <span class="nevk-action-meta">
           <a href="{% url 'admin:app_list' app_label=entry.content_type.app_label %}">
-            {{ entry.content_type }}
+            {{ entry.content_type|capfirst }}
           </a>
         </span>
         {% endif %}

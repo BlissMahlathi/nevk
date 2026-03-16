@@ -22,6 +22,19 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
+# Admin hardening: use a non-default path and optionally restrict by host/IP.
+ADMIN_URL = config("ADMIN_URL", default="admin/").strip("/") + "/"
+ADMIN_ALLOWED_IPS = [
+    ip.strip()
+    for ip in config("ADMIN_ALLOWED_IPS", default="", cast=Csv())
+    if ip.strip()
+]
+ADMIN_ALLOWED_HOSTS = [
+    host.strip()
+    for host in config("ADMIN_ALLOWED_HOSTS", default="", cast=Csv())
+    if host.strip()
+]
+
 if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
     raise ImproperlyConfigured(
         "A strong SECRET_KEY is required when DEBUG=False."
@@ -30,6 +43,11 @@ if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
 if not DEBUG and not ALLOWED_HOSTS:
     raise ImproperlyConfigured(
         "ALLOWED_HOSTS must be configured when DEBUG=False."
+    )
+
+if not DEBUG and ADMIN_URL == "admin/":
+    raise ImproperlyConfigured(
+        "Set a non-default ADMIN_URL when DEBUG=False."
     )
 
 # ---------------------------------------------------------------------------
@@ -55,6 +73,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "core.middleware.AdminAccessControlMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

@@ -1,13 +1,12 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { categories as fallbackCategories } from "@/data/products";
-import { useCategoriesQuery } from "@/hooks/useCatalog";
+import { USE_FALLBACK_CATALOG, useCategoriesQuery } from "@/hooks/useCatalog";
 
 const CategoryShowcase = () => {
-  const { data } = useCategoriesQuery();
-  const activeCategories = (data || fallbackCategories)
-    .filter((c) => c.isActive)
-    .slice(0, 4);
+  const { data, error } = useCategoriesQuery();
+  const source = data || (USE_FALLBACK_CATALOG ? fallbackCategories : []);
+  const activeCategories = source.filter((c) => c.isActive).slice(0, 4);
 
   return (
     <section className="section-padding">
@@ -56,6 +55,12 @@ const CategoryShowcase = () => {
           </motion.div>
         ))}
       </div>
+
+      {error && !USE_FALLBACK_CATALOG && (
+        <p className="text-center text-red-600 text-body text-xs mt-6">
+          Could not load categories from API.
+        </p>
+      )}
     </section>
   );
 };

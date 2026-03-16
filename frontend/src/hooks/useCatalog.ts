@@ -10,6 +10,9 @@ import {
   type ProductQueryParams,
 } from "@/lib/api";
 
+export const USE_FALLBACK_CATALOG =
+  import.meta.env.VITE_USE_FALLBACK_CATALOG === "true";
+
 export function useCategoriesQuery() {
   return useQuery({
     queryKey: ["catalog", "categories"],
@@ -43,6 +46,6 @@ export function useProductDetailQuery(slug?: string) {
 }
 
 export const fallbackCatalogData = {
-  categories: fallbackCategories,
-  products: fallbackProducts,
+  categories: USE_FALLBACK_CATALOG ? fallbackCategories : [],
+  products: USE_FALLBACK_CATALOG ? fallbackProducts : [],
 };

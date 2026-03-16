@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { products as fallbackProducts } from "@/data/products";
-import { useProductsQuery } from "@/hooks/useCatalog";
+import { USE_FALLBACK_CATALOG, useProductsQuery } from "@/hooks/useCatalog";
 import ProductCard from "./ProductCard";
 
 const FeaturedProducts = () => {
-  const { data } = useProductsQuery({ featured: true, pageSize: 8 });
-  const featured = (data || fallbackProducts)
+  const { data, error } = useProductsQuery({ featured: true, pageSize: 8 });
+  const source = data || (USE_FALLBACK_CATALOG ? fallbackProducts : []);
+  const featured = source
     .filter((p) => p.isFeatured && p.isActive)
     .slice(0, 6);
 
@@ -30,6 +31,12 @@ const FeaturedProducts = () => {
           <ProductCard key={product.id} product={product} index={i} />
         ))}
       </motion.div>
+
+      {error && !USE_FALLBACK_CATALOG && (
+        <p className="text-center text-red-600 text-body text-xs mt-6">
+          Could not load featured products from API.
+        </p>
+      )}
 
       <div className="text-center mt-14">
         <Link to="/shop" className="btn-ghost inline-block">

@@ -4,6 +4,28 @@ from django.utils.html import format_html
 from .models import Category, Product, ProductImage
 
 
+class InventoryStatusFilter(admin.SimpleListFilter):
+    title = "inventory"
+    parameter_name = "inventory"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("low", "Low stock (< 5)"),
+            ("out", "Out of stock"),
+            ("in", "In stock"),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == "low":
+            return queryset.filter(stock__gt=0, stock__lt=5)
+        if value == "out":
+            return queryset.filter(stock=0)
+        if value == "in":
+            return queryset.filter(stock__gt=0)
+        return queryset
+
+
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 0
@@ -54,7 +76,14 @@ class ProductAdmin(admin.ModelAdmin):
         "name", "category", "price", "stock", "in_stock",
         "is_featured", "is_active", "thumbnail", "updated_at",
     )
-    list_filter = ("is_active", "is_featured", "category", "created_at", "updated_at")
+    list_filter = (
+        "is_active",
+        "is_featured",
+        "category",
+        InventoryStatusFilter,
+        "created_at",
+        "updated_at",
+    )
     search_fields = ("name", "slug", "description", "flavor", "color", "scent", "size")
     prepopulated_fields = {"slug": ("name",)}
     list_editable = ("price", "stock", "is_featured", "is_active")

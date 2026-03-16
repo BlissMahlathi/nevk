@@ -8,7 +8,11 @@ import {
   categories as fallbackCategories,
   products as fallbackProducts,
 } from "@/data/products";
-import { useCategoriesQuery, useProductsQuery } from "@/hooks/useCatalog";
+import {
+  USE_FALLBACK_CATALOG,
+  useCategoriesQuery,
+  useProductsQuery,
+} from "@/hooks/useCatalog";
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,15 +21,20 @@ const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
 
-  const { data: categoriesData } = useCategoriesQuery();
-  const { data: productsData, isLoading } = useProductsQuery({
+  const { data: categoriesData, error: categoriesError } = useCategoriesQuery();
+  const {
+    data: productsData,
+    isLoading,
+    error: productsError,
+  } = useProductsQuery({
     category: activeCategory,
     search: searchQuery,
     pageSize: 48,
   });
 
-  const categories = categoriesData || fallbackCategories;
-  const products = productsData || fallbackProducts;
+  const categories =
+    categoriesData || (USE_FALLBACK_CATALOG ? fallbackCategories : []);
+  const products = productsData || (USE_FALLBACK_CATALOG ? fallbackProducts : []);
 
   const handleCategoryChange = (slug: string) => {
     setActiveCategory(slug);
@@ -148,6 +157,12 @@ const Shop = () => {
             ? "Loading products..."
             : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
         </p>
+
+        {(productsError || categoriesError) && !USE_FALLBACK_CATALOG && (
+          <p className="text-center text-red-600 text-body text-xs mb-8">
+            Could not load live catalog from API. Check VITE_API_BASE_URL and backend CORS settings.
+          </p>
+        )}
 
         {/* Products grid */}
         <motion.div
