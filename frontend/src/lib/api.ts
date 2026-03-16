@@ -86,9 +86,14 @@ export interface WhatsAppOrderResponse {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const hasBody = Boolean(init?.body);
+  const defaultHeaders: HeadersInit = hasBody
+    ? { "Content-Type": "application/json" }
+    : {};
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
-      "Content-Type": "application/json",
+      ...defaultHeaders,
       ...(init?.headers || {}),
     },
     ...init,
