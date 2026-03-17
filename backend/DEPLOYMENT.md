@@ -257,4 +257,4 @@ curl -I -u nevk_admin:YOUR_PASSWORD https://your-backend-domain.com/secure-admin
 - `POST /api/orders/whatsapp/` creates an `Order` and `OrderItem` records and returns `whatsapp_url`.
 - Nginx serves `/static/` and `/media/` correctly.
 - API responses include expected `Cache-Control` and `Vary` headers.
-- Netlify static assets are served with long-lived cache headers from `frontend/public/_headers`.
+- Frontend static assets are served with long-lived cache headers from `frontend/public/_headers`.

@@ -2,5 +2,5 @@
 /sitemap.xml /sitemap.xml 200
 /robots.txt /robots.txt 200
 
-# SPA fallback for route sharing on Netlify.
+# SPA fallback for static hosts that support `_redirects`.
 /* /index.html 200

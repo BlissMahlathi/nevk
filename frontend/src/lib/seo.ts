@@ -1,4 +1,4 @@
-export const SITE_URL = "https://nevk.netlify.app";
+export const SITE_URL = "https://nevk.vercel.app";
 export const SITE_NAME = "Nevk Cosmetics";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 

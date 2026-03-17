@@ -5,7 +5,7 @@ import FeaturedProducts from "@/components/store/FeaturedProducts";
 import BrandStatement from "@/components/store/BrandStatement";
 import CategoryShowcase from "@/components/store/CategoryShowcase";
 import PromoStrip from "@/components/store/PromoStrip";
-import { DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { DEFAULT_OG_IMAGE, SITE_URL, absoluteUrl } from "@/lib/seo";
 
 const Index = () => {
   return (
@@ -20,8 +20,8 @@ const Index = () => {
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "Nevk Cosmetics",
-          url: "https://nevk.netlify.app",
-          logo: "https://nevk.netlify.app/logo.png",
+          url: SITE_URL,
+          logo: absoluteUrl("/logo.png"),
           email: "nevkcosmetics@gmail.com",
           address: {
             "@type": "PostalAddress",

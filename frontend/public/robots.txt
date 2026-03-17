@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Host: https://nevk.netlify.app
-Sitemap: https://nevk.netlify.app/sitemap.xml
+Host: https://nevk.vercel.app
+Sitemap: https://nevk.vercel.app/sitemap.xml

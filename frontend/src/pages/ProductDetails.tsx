@@ -12,6 +12,7 @@ import {
   useProductsQuery,
 } from "@/hooks/useCatalog";
 import { useCart } from "@/context/CartContext";
+import { absoluteUrl } from "@/lib/seo";
 
 const ProductDetails = () => {
   const { slug } = useParams();
@@ -116,7 +117,7 @@ const ProductDetails = () => {
               product.stock > 0
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
-            url: `https://nevk.netlify.app/product/${product.slug}`,
+            url: absoluteUrl(`/product/${product.slug}`),
           },
         }}
       />
