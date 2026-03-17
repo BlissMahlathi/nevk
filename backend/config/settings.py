@@ -71,6 +71,12 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv(),
 )
 
+CORS_ALLOWED_ORIGIN_REGEXES = config(
+    "CORS_ALLOWED_ORIGIN_REGEXES",
+    default="",
+    cast=Csv(),
+)
+
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
     default="http://localhost:5173,http://127.0.0.1:5173",
