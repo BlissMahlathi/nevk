@@ -34,7 +34,6 @@ const Shop = () => {
 
   const categories =
     categoriesData || (USE_FALLBACK_CATALOG ? fallbackCategories : []);
-  const products = productsData || (USE_FALLBACK_CATALOG ? fallbackProducts : []);
 
   const handleCategoryChange = (slug: string) => {
     setActiveCategory(slug);
@@ -47,7 +46,10 @@ const Shop = () => {
   };
 
   const filtered = useMemo(() => {
-    let result = products
+    const sourceProducts =
+      productsData || (USE_FALLBACK_CATALOG ? fallbackProducts : []);
+
+    let result = sourceProducts
       .filter((p) => p.isActive)
       .filter(
         (p) => activeCategory === "all" || p.categorySlug === activeCategory,
@@ -78,7 +80,7 @@ const Shop = () => {
     }
 
     return result;
-  }, [activeCategory, products, searchQuery, sortBy]);
+  }, [activeCategory, productsData, searchQuery, sortBy]);
 
   return (
     <Layout>

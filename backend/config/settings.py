@@ -11,8 +11,28 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNNING_TESTS = "test" in sys.argv
 
+TRUE_VALUES = {"1", "true", "t", "yes", "y", "on", "debug", "development", "dev"}
+FALSE_VALUES = {"0", "false", "f", "no", "n", "off", "release", "production", "prod"}
+
+
+def env_bool(name, default=False):
+    raw_value = config(name, default=None)
+    if raw_value is None:
+        return default
+
+    normalized = str(raw_value).strip().lower()
+    if normalized in TRUE_VALUES:
+        return True
+    if normalized in FALSE_VALUES:
+        return False
+
+    raise ImproperlyConfigured(
+        f"{name} must be a boolean-like value, got {raw_value!r}."
+    )
+
+
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default=False, cast=bool)
+DEBUG = env_bool("DEBUG", default=False)
 
 # Start with explicit local hosts
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
@@ -90,6 +110,21 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
 DATABASES = {
     "default": {
         "ENGINE": config("DB_ENGINE", default="django.db.backends.sqlite3"),
@@ -136,10 +171,15 @@ REST_FRAMEWORK = {
 }
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = config(
-    "SECURE_SSL_REDIRECT", default=not DEBUG, cast=bool)
-SESSION_COOKIE_SECURE = config(
-    "SESSION_COOKIE_SECURE", default=not DEBUG, cast=bool)
-CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=not DEBUG, cast=bool)
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", default=not DEBUG)
+
+if RUNNING_TESTS:
+    # Keep production defaults strict, but avoid redirect/cookie behavior
+    # that breaks local test clients when DEBUG is forced off.
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
 
 WHATSAPP_ORDER_NUMBER = config("WHATSAPP_ORDER_NUMBER", default="")

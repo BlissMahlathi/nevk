@@ -6,9 +6,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from PIL import Image
 
-from .models import Category, Product, ProductImage
-
-
 TEMP_MEDIA_ROOT = tempfile.mkdtemp()
 
 
@@ -30,6 +27,8 @@ class CatalogTests(TestCase):
         )
 
     def test_category_endpoint_returns_active_product_counts(self):
+        from .models import Category, Product
+
         category = Category.objects.create(name="Lip Gloss")
         Product.objects.create(
             category=category,
@@ -54,6 +53,8 @@ class CatalogTests(TestCase):
         self.assertEqual(payload[0]["product_count"], 1)
 
     def test_product_image_save_creates_processed_storefront_image(self):
+        from .models import Category, Product, ProductImage
+
         category = Category.objects.create(name="Skincare")
         product = Product.objects.create(
             category=category,
