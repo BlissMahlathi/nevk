@@ -1,19 +1,16 @@
 from io import BytesIO
 import logging
-import os
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from PIL import Image, ImageOps
 
 
 PROCESSED_IMAGE_MAX_SIZE = (1600, 1600)
-BACKGROUND_REMOVAL_SERVICE_URL = os.getenv("BG_REMOVAL_SERVICE_URL", "").strip()
-BACKGROUND_REMOVAL_SERVICE_TOKEN = os.getenv("BG_REMOVAL_SERVICE_TOKEN", "").strip()
-BACKGROUND_REMOVAL_TIMEOUT = float(os.getenv("BG_REMOVAL_TIMEOUT", "25"))
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +32,7 @@ def _build_multipart_body(filename, file_bytes):
 
 
 def _request_background_removed_image(filename, file_bytes):
-    if not BACKGROUND_REMOVAL_SERVICE_URL:
+    if not settings.BG_REMOVAL_SERVICE_URL:
         return None
 
     request_body, content_type = _build_multipart_body(filename, file_bytes)
@@ -43,18 +40,18 @@ def _request_background_removed_image(filename, file_bytes):
         "Content-Type": content_type,
         "Accept": "image/*",
     }
-    if BACKGROUND_REMOVAL_SERVICE_TOKEN:
-        headers["Authorization"] = f"Bearer {BACKGROUND_REMOVAL_SERVICE_TOKEN}"
+    if settings.BG_REMOVAL_SERVICE_TOKEN:
+        headers["Authorization"] = f"Bearer {settings.BG_REMOVAL_SERVICE_TOKEN}"
 
     request = Request(
-        BACKGROUND_REMOVAL_SERVICE_URL,
+        settings.BG_REMOVAL_SERVICE_URL,
         data=request_body,
         headers=headers,
         method="POST",
     )
 
     try:
-        with urlopen(request, timeout=BACKGROUND_REMOVAL_TIMEOUT) as response:
+        with urlopen(request, timeout=settings.BG_REMOVAL_TIMEOUT) as response:
             return response.read()
     except (HTTPError, URLError, TimeoutError, ValueError) as exc:
         logger.warning("Background removal service failed; falling back: %s", exc)

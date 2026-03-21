@@ -26,7 +26,7 @@
 
 ## 2. Example Environment File
 
-Use `backend/.env.example` as a template and create `backend/.env`.
+Use `backend/.env.production.example` as the production template and create `backend/.env`.
 
 ## 3. Basic Ubuntu Deploy Recipe (Gunicorn + Nginx + Postgres)
 
@@ -57,7 +57,7 @@ GRANT ALL PRIVILEGES ON DATABASE nevk TO nevk_user;
 
 ```bash
 cd /home/hlulani/projectFolder/Nevk/backend
-cp .env.example .env
+cp .env.production.example .env
 # edit .env with production values
 ```
 

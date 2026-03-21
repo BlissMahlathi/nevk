@@ -51,6 +51,10 @@ class CatalogTests(TestCase):
         payload = response.json()
         self.assertEqual(payload[0]["slug"], category.slug)
         self.assertEqual(payload[0]["product_count"], 1)
+        self.assertEqual(
+            response["Cache-Control"],
+            "public, max-age=600, s-maxage=1800, stale-while-revalidate=300",
+        )
 
     def test_product_image_save_creates_processed_storefront_image(self):
         from .models import Category, Product, ProductImage
@@ -78,4 +82,38 @@ class CatalogTests(TestCase):
             product_image.processed_image.storage.exists(
                 product_image.processed_image.name
             )
+        )
+
+    def test_product_detail_endpoint_returns_absolute_image_urls(self):
+        from .models import Category, Product, ProductImage
+
+        category = Category.objects.create(name="Body Care")
+        product = Product.objects.create(
+            category=category,
+            name="Glow Butter",
+            description="A rich body butter.",
+            price="180.00",
+            stock=7,
+            is_featured=True,
+        )
+        ProductImage.objects.create(
+            product=product,
+            original_image=self.create_uploaded_image("glow-butter.png"),
+            is_primary=True,
+        )
+
+        response = self.client.get(f"/api/catalog/products/{product.slug}/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["category"]["slug"], category.slug)
+        self.assertTrue(payload["images"])
+        self.assertTrue(
+            payload["images"][0]["display_image"].startswith(
+                "http://testserver/media/products/processed/"
+            )
+        )
+        self.assertEqual(
+            response["Cache-Control"],
+            "public, max-age=120, s-maxage=600, stale-while-revalidate=120",
         )

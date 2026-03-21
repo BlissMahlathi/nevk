@@ -5,11 +5,20 @@ Django settings for Nevk Cosmetics.
 import os
 import sys
 from pathlib import Path
+
 from decouple import config, Csv
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 RUNNING_TESTS = "test" in sys.argv
+DEFAULT_LOCAL_FRONTEND_ORIGINS = ",".join(
+    [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+)
 
 TRUE_VALUES = {"1", "true", "t", "yes", "y", "on", "debug", "development", "dev"}
 FALSE_VALUES = {"0", "false", "f", "no", "n", "off", "release", "production", "prod"}
@@ -67,7 +76,7 @@ if not DEBUG and not ALLOWED_HOSTS:
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:5173,http://127.0.0.1:5173",
+    default=DEFAULT_LOCAL_FRONTEND_ORIGINS,
     cast=Csv(),
 )
 
@@ -79,7 +88,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = config(
 
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:5173,http://127.0.0.1:5173",
+    default=DEFAULT_LOCAL_FRONTEND_ORIGINS,
     cast=Csv(),
 )
 
@@ -92,10 +101,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "accounts",
     "catalog",
     "core",
-    "media_manager",
 ]
 
 MIDDLEWARE = [
@@ -157,6 +164,11 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+WHITENOISE_MAX_AGE = config(
+    "WHITENOISE_MAX_AGE",
+    default=0 if DEBUG else 31536000,
+    cast=int,
+)
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -180,6 +192,21 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=not DEBUG)
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=not DEBUG)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", default=not DEBUG)
+SECURE_HSTS_SECONDS = config(
+    "SECURE_HSTS_SECONDS",
+    default=0 if DEBUG else 31536000,
+    cast=int,
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(
+    "SECURE_HSTS_INCLUDE_SUBDOMAINS",
+    default=not DEBUG,
+)
+SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
+SECURE_REFERRER_POLICY = config(
+    "SECURE_REFERRER_POLICY",
+    default="same-origin" if DEBUG else "strict-origin-when-cross-origin",
+)
+X_FRAME_OPTIONS = config("X_FRAME_OPTIONS", default="DENY")
 
 if RUNNING_TESTS:
     # Keep production defaults strict, but avoid redirect/cookie behavior
@@ -187,5 +214,11 @@ if RUNNING_TESTS:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
 
 WHATSAPP_ORDER_NUMBER = config("WHATSAPP_ORDER_NUMBER", default="")
+BG_REMOVAL_SERVICE_URL = config("BG_REMOVAL_SERVICE_URL", default="").strip()
+BG_REMOVAL_SERVICE_TOKEN = config("BG_REMOVAL_SERVICE_TOKEN", default="").strip()
+BG_REMOVAL_TIMEOUT = config("BG_REMOVAL_TIMEOUT", default=25, cast=float)

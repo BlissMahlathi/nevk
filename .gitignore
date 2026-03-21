@@ -1,0 +1,28 @@
+# Local environment files
+.env
+backend/.env
+frontend/.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+backend/djangoenv/
+backend/staticfiles/
+backend/media/
+backend/*.sqlite3
+backend/test_db.sqlite3
+
+# Frontend build/runtime output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Standardize on npm lockfiles for the frontend
+frontend/bun.lock
+frontend/bun.lockb
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/

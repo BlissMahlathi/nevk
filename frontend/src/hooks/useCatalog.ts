@@ -9,9 +9,9 @@ import {
   fetchProducts,
   type ProductQueryParams,
 } from "@/lib/api";
+import { USE_FALLBACK_CATALOG } from "@/lib/config";
 
-export const USE_FALLBACK_CATALOG =
-  import.meta.env.VITE_USE_FALLBACK_CATALOG === "true";
+export { USE_FALLBACK_CATALOG };
 
 export function useCategoriesQuery() {
   return useQuery({
