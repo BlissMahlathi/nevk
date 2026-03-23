@@ -162,7 +162,8 @@ const Shop = () => {
 
         {(productsError || categoriesError) && !USE_FALLBACK_CATALOG && (
           <p className="text-center text-red-600 text-body text-xs mb-8">
-            Could not load live catalog from API. Check VITE_API_BASE_URL and backend CORS settings.
+            Could not load live catalog. Check VITE_SUPABASE_URL,
+            VITE_SUPABASE_ANON_KEY, and Supabase RLS policies.
           </p>
         )}
 

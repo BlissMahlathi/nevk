@@ -1,31 +1,32 @@
 import { describe, expect, it } from "vitest";
 
-import { isFallbackCatalogEnabled, resolveApiBaseUrl } from "@/lib/config";
+import {
+  isFallbackCatalogEnabled,
+  normalizeWhatsAppNumber,
+  requireEnvValue,
+} from "@/lib/config";
 
-describe("resolveApiBaseUrl", () => {
-  it("uses an explicit configured API base URL when provided", () => {
-    expect(
-      resolveApiBaseUrl({
-        DEV: false,
-        VITE_API_BASE_URL: "https://api.nevkcosmetics.com/api/",
-      }),
-    ).toBe("https://api.nevkcosmetics.com/api");
+describe("requireEnvValue", () => {
+  it("returns a trimmed value when provided", () => {
+    expect(requireEnvValue("  value  ", "VITE_X")).toBe("value");
   });
 
-  it("falls back to the local Django API during development", () => {
-    expect(resolveApiBaseUrl({ DEV: true })).toBe("http://127.0.0.1:8000/api");
+  it("throws for missing values", () => {
+    expect(() => requireEnvValue("", "VITE_X")).toThrow("Missing VITE_X");
   });
+});
 
-  it("falls back to a same-origin API path in production", () => {
-    expect(resolveApiBaseUrl({ DEV: false })).toBe("/api");
+describe("normalizeWhatsAppNumber", () => {
+  it("keeps only digits", () => {
+    expect(normalizeWhatsAppNumber("+27 71 523 1720")).toBe("27715231720");
   });
 });
 
 describe("isFallbackCatalogEnabled", () => {
   it("treats only the string true as enabled", () => {
-    expect(isFallbackCatalogEnabled({ VITE_USE_FALLBACK_CATALOG: "true" })).toBe(
-      true,
-    );
+    expect(
+      isFallbackCatalogEnabled({ VITE_USE_FALLBACK_CATALOG: "true" }),
+    ).toBe(true);
     expect(
       isFallbackCatalogEnabled({ VITE_USE_FALLBACK_CATALOG: "false" }),
     ).toBe(false);

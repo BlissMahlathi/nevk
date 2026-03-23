@@ -1,5 +1,67 @@
 # Nevk Backend Production Checklist and Deploy Recipe
 
+## A. Containerized Deployment (Recommended)
+
+Use this mode when you want predictable runtime behavior across local and hosted environments.
+
+### 0.1 Build and run locally with Docker
+
+```bash
+cd /home/hlulani/projectFolder/Nevk
+cp backend/.env.docker.example backend/.env.docker
+docker compose up --build backend db
+```
+
+### 0.2 Verify health
+
+```bash
+curl http://127.0.0.1:8000/api/health/
+```
+
+### 0.3 Production notes
+
+- Keep secrets in host-managed env variables.
+- Use managed Postgres in production and set either `DATABASE_URL` or `DB_*` vars.
+- Persist media using object storage or mounted volume.
+
+## 0. Quick Switch To Railway (Managed Hosting)
+
+Use this when you want to move away from the current host quickly.
+
+### 0.1 Prerequisites
+
+- This repository includes [Procfile](../Procfile) and [railway.json](../railway.json).
+- Backend dependencies are already defined in `backend/requirements.txt`.
+
+### 0.2 Railway setup
+
+1. Create a new Railway project from your GitHub repo.
+2. Add a PostgreSQL service in the same project.
+3. Set backend environment variables on the backend service:
+   - `DEBUG=False`
+   - `SECRET_KEY=<strong-random-secret>`
+   - `ALLOWED_HOSTS=<railway-domain,custom-domain>`
+   - `CORS_ALLOWED_ORIGINS=<frontend-origin>`
+   - `CSRF_TRUSTED_ORIGINS=<frontend-origin>`
+   - `WHATSAPP_ORDER_NUMBER=<international-digits>`
+   - `DB_ENGINE=django.db.backends.postgresql`
+   - `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` from Railway Postgres
+   - `SECURE_SSL_REDIRECT=True`
+   - `SESSION_COOKIE_SECURE=True`
+   - `CSRF_COOKIE_SECURE=True`
+
+### 0.3 Deploy verification
+
+- Open `/api/health/` on the Railway backend URL.
+- Confirm products load from `/api/products/`.
+- Confirm order creation at `/api/orders/whatsapp/`.
+- Update frontend `VITE_API_BASE_URL` to `https://<railway-backend-domain>/api`.
+
+### 0.4 Notes
+
+- The startup command runs migrations and `collectstatic` automatically.
+- Keep admin route non-default through `ADMIN_URL`.
+
 ## 1. Production Checklist
 
 - Set `DEBUG=False`.
@@ -9,6 +71,7 @@
 - Optionally set `ADMIN_ALLOWED_HOSTS` and/or `ADMIN_ALLOWED_IPS` to restrict admin access.
 - Set `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` to your frontend origin(s).
 - Use PostgreSQL (`DB_ENGINE=django.db.backends.postgresql`) with strong credentials.
+- On managed providers, prefer `DATABASE_URL` (optionally `DB_SSL_REQUIRE=True`) instead of separate `DB_*` values.
 - Set `WHATSAPP_ORDER_NUMBER` in international digits format (example: `27731234567`).
 - Ensure these security env vars are enabled:
   - `SECURE_SSL_REDIRECT=True`

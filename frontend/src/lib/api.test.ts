@@ -6,49 +6,78 @@ import {
   fetchProducts,
 } from "@/lib/api";
 
-type MockResponseBody = Record<string, unknown> | Array<unknown>;
+const fromMock = vi.fn();
+const storageFromMock = vi.fn(() => ({
+  getPublicUrl: vi.fn((path: string) => ({
+    data: { publicUrl: `https://cdn.example.com/${path}` },
+  })),
+}));
 
-function createMockResponse(body: MockResponseBody, ok = true) {
-  return {
-    ok,
-    json: async () => body,
-    text: async () => JSON.stringify(body),
-  } as Response;
-}
+vi.mock("@/lib/supabase", () => ({
+  getSupabaseClient: () => ({
+    from: fromMock,
+    storage: {
+      from: storageFromMock,
+    },
+  }),
+}));
 
 describe("catalog api client", () => {
-  const fetchMock = vi.fn();
-
   beforeEach(() => {
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("VITE_WHATSAPP_ORDER_NUMBER", "27715231720");
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-    fetchMock.mockReset();
+    vi.unstubAllEnvs();
+    fromMock.mockReset();
+    storageFromMock.mockClear();
   });
 
-  it("uses the featured products endpoint when no other filters are present", async () => {
-    fetchMock.mockResolvedValue(
-      createMockResponse([
-        {
-          id: 1,
-          name: "Rose Shine",
-          slug: "rose-shine",
-          price: "120.00",
-          stock: 4,
-          in_stock: true,
-          is_featured: true,
-          category_name: "Lip Gloss",
-          category_slug: "lip-gloss",
-          primary_image: "https://cdn.example.com/rose-shine.webp",
-        },
-      ]),
-    );
+  it("filters featured products from supabase results", async () => {
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            name: "Rose Shine",
+            slug: "rose-shine",
+            description: "Hydrating gloss",
+            price: "120.00",
+            stock: 4,
+            is_featured: true,
+            is_active: true,
+            category: { name: "Lip Gloss", slug: "lip-gloss" },
+            images: [
+              {
+                processed_image: "https://cdn.example.com/rose-shine.webp",
+                original_image: null,
+                is_primary: true,
+              },
+            ],
+          },
+          {
+            id: 2,
+            name: "Daily Balm",
+            slug: "daily-balm",
+            description: "Everyday balm",
+            price: "99.00",
+            stock: 10,
+            is_featured: false,
+            is_active: true,
+            category: { name: "Lip Care", slug: "lip-care" },
+            images: [],
+          },
+        ],
+        error: null,
+      }),
+    };
+    fromMock.mockReturnValue(query);
 
     const products = await fetchProducts({ featured: true });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("/catalog/products/featured/");
+    expect(products).toHaveLength(1);
     expect(products[0]).toMatchObject({
       id: "1",
       slug: "rose-shine",
@@ -59,40 +88,38 @@ describe("catalog api client", () => {
   });
 
   it("maps product detail payloads into the storefront shape", async () => {
-    fetchMock.mockResolvedValue(
-      createMockResponse({
-        id: 2,
-        name: "Glow Butter",
-        slug: "glow-butter",
-        description: "A rich body butter.",
-        price: "180.00",
-        stock: 7,
-        in_stock: true,
-        is_featured: false,
-        is_active: true,
-        category: {
-          id: 9,
-          name: "Body Care",
-          slug: "body-care",
-          description: "",
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: {
+          id: 2,
+          name: "Glow Butter",
+          slug: "glow-butter",
+          description: "A rich body butter.",
+          price: "180.00",
+          stock: 7,
+          is_featured: false,
           is_active: true,
-        },
-        images: [
-          {
-            id: 10,
-            display_image: "https://cdn.example.com/glow-butter.webp",
-            processed_image: "https://cdn.example.com/glow-butter.webp",
-            original_image: "https://cdn.example.com/glow-butter.png",
-            alt_text: "Glow Butter",
-            is_primary: true,
+          category: {
+            name: "Body Care",
+            slug: "body-care",
           },
-        ],
+          images: [
+            {
+              processed_image: "https://cdn.example.com/glow-butter.webp",
+              original_image: "https://cdn.example.com/glow-butter.png",
+              is_primary: true,
+            },
+          ],
+        },
+        error: null,
       }),
-    );
+    };
+    fromMock.mockReturnValue(query);
 
     const product = await fetchProductDetail("glow-butter");
 
-    expect(fetchMock.mock.calls[0][0]).toContain("/catalog/products/glow-butter/");
     expect(product).toMatchObject({
       id: "2",
       slug: "glow-butter",
@@ -103,16 +130,7 @@ describe("catalog api client", () => {
     });
   });
 
-  it("posts WhatsApp checkout payloads to the backend", async () => {
-    fetchMock.mockResolvedValue(
-      createMockResponse({
-        order_id: 14,
-        whatsapp_url: "https://wa.me/27715231720?text=Hello",
-        subtotal: 290,
-        item_count: 3,
-      }),
-    );
-
+  it("builds a WhatsApp checkout URL on the client", async () => {
     const result = await createWhatsAppOrder({
       items: [
         { name: "Rose Shine", quantity: 2, price: 120 },
@@ -120,14 +138,11 @@ describe("catalog api client", () => {
       ],
     });
 
-    expect(fetchMock.mock.calls[0][0]).toContain("/orders/whatsapp/");
-    expect(fetchMock.mock.calls[0][1]).toMatchObject({
-      method: "POST",
-    });
+    expect(result.whatsapp_url).toContain("https://wa.me/27715231720?text=");
     expect(result).toMatchObject({
-      order_id: 14,
       subtotal: 290,
       item_count: 3,
     });
+    expect(result.order_id.startsWith("local-")).toBe(true);
   });
 });

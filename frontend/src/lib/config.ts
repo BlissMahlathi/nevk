@@ -1,27 +1,35 @@
-const DEFAULT_DEV_API_BASE_URL = "http://127.0.0.1:8000/api";
-const DEFAULT_PROD_API_BASE_URL = "/api";
-
 type FrontendEnv = {
-  DEV?: boolean;
-  VITE_API_BASE_URL?: string;
+  VITE_SUPABASE_URL?: string;
+  VITE_SUPABASE_ANON_KEY?: string;
+  VITE_SUPABASE_PRODUCTS_BUCKET?: string;
+  VITE_WHATSAPP_ORDER_NUMBER?: string;
   VITE_USE_FALLBACK_CATALOG?: string;
 };
 
-function normalizeBaseUrl(value: string) {
-  return value.trim().replace(/\/$/, "");
-}
-
-export function resolveApiBaseUrl(env: FrontendEnv) {
-  if (env.VITE_API_BASE_URL?.trim()) {
-    return normalizeBaseUrl(env.VITE_API_BASE_URL);
+export function requireEnvValue(value: string | undefined, name: string) {
+  const resolved = value?.trim();
+  if (!resolved) {
+    throw new Error(
+      `Missing ${name}. Add it to your frontend environment configuration.`,
+    );
   }
-
-  return env.DEV ? DEFAULT_DEV_API_BASE_URL : DEFAULT_PROD_API_BASE_URL;
+  return resolved;
 }
 
 export function isFallbackCatalogEnabled(env: FrontendEnv) {
   return env.VITE_USE_FALLBACK_CATALOG === "true";
 }
 
-export const API_BASE_URL = resolveApiBaseUrl(import.meta.env);
+export function normalizeWhatsAppNumber(value: string | undefined) {
+  return (value || "").replace(/\D/g, "");
+}
+
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.trim() || "";
+export const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || "";
+export const SUPABASE_PRODUCTS_BUCKET =
+  import.meta.env.VITE_SUPABASE_PRODUCTS_BUCKET?.trim() || "products";
+export const WHATSAPP_ORDER_NUMBER =
+  normalizeWhatsAppNumber(import.meta.env.VITE_WHATSAPP_ORDER_NUMBER) ||
+  "27715231720";
 export const USE_FALLBACK_CATALOG = isFallbackCatalogEnabled(import.meta.env);

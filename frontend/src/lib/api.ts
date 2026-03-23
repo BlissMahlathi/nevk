@@ -3,55 +3,41 @@ import {
   categories as fallbackCategories,
   products as fallbackProducts,
 } from "@/data/products";
-import { API_BASE_URL } from "@/lib/config";
+import { SUPABASE_PRODUCTS_BUCKET, WHATSAPP_ORDER_NUMBER } from "@/lib/config";
+import { getSupabaseClient } from "@/lib/supabase";
 
-interface BackendCategory {
+interface SupabaseCategory {
   id: number;
   name: string;
   slug: string;
-  description: string;
+  description: string | null;
   is_active: boolean;
-  product_count?: number;
 }
 
-interface BackendProductListItem {
-  id: number;
-  name: string;
-  slug: string;
-  price: string | number;
-  stock: number;
-  in_stock: boolean;
-  flavor?: string;
-  color?: string;
-  scent?: string;
-  size?: string;
-  is_featured: boolean;
-  category_name?: string;
-  category_slug?: string;
-  primary_image?: string | null;
-}
-
-interface BackendProductImage {
-  id: number;
+interface SupabaseProductImage {
   original_image?: string | null;
   processed_image?: string | null;
-  display_image?: string | null;
-  alt_text?: string;
-  is_primary: boolean;
+  is_primary?: boolean | null;
 }
 
-interface BackendProductDetail extends BackendProductListItem {
-  description: string;
+interface SupabaseProduct {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: string | number;
+  stock: number;
+  flavor?: string | null;
+  color?: string | null;
+  scent?: string | null;
+  size?: string | null;
+  is_featured: boolean;
   is_active: boolean;
-  category?: BackendCategory;
-  images?: BackendProductImage[];
-}
-
-interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
+  category?: {
+    name: string;
+    slug: string;
+  } | null;
+  images?: SupabaseProductImage[] | null;
 }
 
 export interface ProductQueryParams {
@@ -74,34 +60,10 @@ export interface WhatsAppOrderPayload {
 }
 
 export interface WhatsAppOrderResponse {
-  order_id: number;
+  order_id: string;
   whatsapp_url: string;
   subtotal: number;
   item_count: number;
-}
-
-async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const hasBody = Boolean(init?.body);
-  const defaultHeaders: HeadersInit = hasBody
-    ? { "Content-Type": "application/json" }
-    : {};
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      ...defaultHeaders,
-      ...(init?.headers || {}),
-    },
-    ...init,
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(
-      text || `API request failed with status ${response.status}`,
-    );
-  }
-
-  return response.json() as Promise<T>;
 }
 
 const fallbackProductBySlug = new Map(
@@ -136,7 +98,33 @@ function pickProductImage(data: {
   return fallbackCategory?.image || fallbackProducts[0]?.image || "";
 }
 
-function mapBackendCategory(category: BackendCategory): Category {
+function resolveSupabaseImageUrl(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:")
+  ) {
+    return trimmed;
+  }
+
+  const normalizedPath = trimmed.replace(/^\//, "");
+  const { data } = getSupabaseClient()
+    .storage.from(SUPABASE_PRODUCTS_BUCKET)
+    .getPublicUrl(normalizedPath);
+  return data.publicUrl || trimmed;
+}
+
+function mapSupabaseCategory(category: SupabaseCategory): Category {
   const fallbackCategory = fallbackCategoryBySlug.get(category.slug);
 
   return {
@@ -148,63 +136,26 @@ function mapBackendCategory(category: BackendCategory): Category {
   };
 }
 
-function mapBackendProductList(item: BackendProductListItem): Product {
+function mapSupabaseProduct(item: SupabaseProduct): Product {
   const fallbackProduct = fallbackProductBySlug.get(item.slug);
-  const image = pickProductImage({
-    slug: item.slug,
-    categorySlug: item.category_slug,
-    primaryImage: item.primary_image,
+  const sortedImages = [...(item.images || [])].sort((a, b) => {
+    if (a.is_primary === b.is_primary) {
+      return 0;
+    }
+    return a.is_primary ? -1 : 1;
   });
-
-  return {
-    id: String(item.id),
-    name: item.name,
-    slug: item.slug,
-    description: fallbackProduct?.description || "",
-    price: Number(item.price),
-    category:
-      item.category_name || fallbackProduct?.category || "Uncategorized",
-    categorySlug: item.category_slug || fallbackProduct?.categorySlug || "",
-    image,
-    images: image ? [image] : [],
-    flavor: item.flavor || fallbackProduct?.flavor,
-    color: item.color || fallbackProduct?.color,
-    scent: item.scent || fallbackProduct?.scent,
-    size: item.size || fallbackProduct?.size,
-    isFeatured: item.is_featured,
-    isActive: true,
-    stock: item.stock,
-  };
-}
-
-function mapBackendProductDetail(item: BackendProductDetail): Product {
-  const fallbackProduct = fallbackProductBySlug.get(item.slug);
-  const images =
-    item.images
-      ?.map(
-        (imageItem) =>
-          imageItem.display_image ||
-          imageItem.processed_image ||
-          imageItem.original_image ||
-          "",
-      )
-      .filter(Boolean) || [];
-
-  const categorySlug =
-    item.category?.slug ||
-    item.category_slug ||
-    fallbackProduct?.categorySlug ||
-    "";
-  const categoryName =
-    item.category?.name ||
-    item.category_name ||
-    fallbackProduct?.category ||
-    "Uncategorized";
+  const imageUrls = sortedImages
+    .map((imageItem) =>
+      resolveSupabaseImageUrl(
+        imageItem.processed_image || imageItem.original_image || null,
+      ),
+    )
+    .filter((image): image is string => Boolean(image));
   const image = pickProductImage({
     slug: item.slug,
-    categorySlug,
-    primaryImage: item.primary_image,
-    images,
+    categorySlug: item.category?.slug,
+    primaryImage: imageUrls[0] || null,
+    images: imageUrls,
   });
 
   return {
@@ -213,10 +164,11 @@ function mapBackendProductDetail(item: BackendProductDetail): Product {
     slug: item.slug,
     description: item.description || fallbackProduct?.description || "",
     price: Number(item.price),
-    category: categoryName,
-    categorySlug,
+    category:
+      item.category?.name || fallbackProduct?.category || "Uncategorized",
+    categorySlug: item.category?.slug || fallbackProduct?.categorySlug || "",
     image,
-    images: images.length > 0 ? images : image ? [image] : [],
+    images: imageUrls.length > 0 ? imageUrls : image ? [image] : [],
     flavor: item.flavor || fallbackProduct?.flavor,
     color: item.color || fallbackProduct?.color,
     scent: item.scent || fallbackProduct?.scent,
@@ -227,68 +179,181 @@ function mapBackendProductDetail(item: BackendProductDetail): Product {
   };
 }
 
-export async function fetchCategories(): Promise<Category[]> {
-  const categories = await apiRequest<BackendCategory[]>(
-    "/catalog/categories/",
+function buildOrderWhatsappUrl(
+  payload: WhatsAppOrderPayload,
+  subtotal: number,
+) {
+  const lines = payload.items.map(
+    (item, index) =>
+      `${index + 1}. ${item.name} x${item.quantity} - R ${(item.quantity * item.price).toFixed(2)}`,
   );
-  return categories
-    .map(mapBackendCategory)
+
+  const messageParts = [
+    "Hello Nevk Cosmetics, I would like to place this order:",
+    "",
+    ...lines,
+    "",
+  ];
+
+  if (payload.customer_name?.trim()) {
+    messageParts.push(`Name: ${payload.customer_name.trim()}`);
+  }
+
+  if (payload.customer_phone?.trim()) {
+    messageParts.push(`Phone: ${payload.customer_phone.trim()}`);
+  }
+
+  messageParts.push(`Subtotal: R ${subtotal.toFixed(2)}`);
+  messageParts.push(
+    `Items: ${payload.items.reduce((sum, item) => sum + item.quantity, 0)}`,
+  );
+
+  if (payload.note?.trim()) {
+    messageParts.push("");
+    messageParts.push(`Note: ${payload.note.trim()}`);
+  }
+
+  messageParts.push("");
+  messageParts.push("Please confirm availability and delivery details.");
+
+  return `https://wa.me/${WHATSAPP_ORDER_NUMBER}?text=${encodeURIComponent(messageParts.join("\n"))}`;
+}
+
+export async function fetchCategories(): Promise<Category[]> {
+  const { data, error } = await getSupabaseClient()
+    .from("categories")
+    .select("id, name, slug, description, is_active")
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data || [])
+    .map(mapSupabaseCategory)
     .filter((category) => category.isActive);
 }
 
 export async function fetchProducts(
   params: ProductQueryParams = {},
 ): Promise<Product[]> {
-  const query = new URLSearchParams();
+  const { data, error } = await getSupabaseClient()
+    .from("products")
+    .select(
+      "id, name, slug, description, price, stock, flavor, color, scent, size, is_featured, is_active, category:categories(name, slug), images:product_images(original_image, processed_image, is_primary)",
+    )
+    .eq("is_active", true)
+    .order("name", { ascending: true });
 
-  if (params.category && params.category !== "all") {
-    query.set("category", params.category);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  if (params.search?.trim()) {
-    query.set("search", params.search.trim());
-  }
+  const categoryFilter = params.category?.trim().toLowerCase();
+  const searchFilter = params.search?.trim().toLowerCase();
 
-  if (params.featured) {
-    query.set("featured", "true");
-  }
+  const filtered = (data || [])
+    .filter((item) => {
+      if (!params.featured) {
+        return true;
+      }
+      return item.is_featured;
+    })
+    .filter((item) => {
+      if (!categoryFilter || categoryFilter === "all") {
+        return true;
+      }
+      return item.category?.slug?.toLowerCase() === categoryFilter;
+    })
+    .filter((item) => {
+      if (!searchFilter) {
+        return true;
+      }
+      const haystack = [
+        item.name,
+        item.description || "",
+        item.category?.name || "",
+        item.flavor || "",
+        item.color || "",
+        item.scent || "",
+        item.size || "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(searchFilter);
+    });
 
-  if (params.page) {
-    query.set("page", String(params.page));
-  }
+  const page = Math.max(1, params.page || 1);
+  const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 0;
+  const paged =
+    pageSize > 0
+      ? filtered.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)
+      : filtered;
 
-  if (params.pageSize) {
-    query.set("page_size", String(params.pageSize));
-  }
-
-  const isFeaturedEndpoint =
-    params.featured && !params.search && !params.category;
-  const path = isFeaturedEndpoint
-    ? "/catalog/products/featured/"
-    : `/catalog/products/${query.size ? `?${query.toString()}` : ""}`;
-  const response = await apiRequest<
-    PaginatedResponse<BackendProductListItem> | BackendProductListItem[]
-  >(path);
-
-  if (Array.isArray(response)) {
-    return response.map(mapBackendProductList);
-  }
-
-  return response.results.map(mapBackendProductList);
+  return paged.map(mapSupabaseProduct);
 }
 
 export async function fetchProductDetail(slug: string): Promise<Product> {
-  const response = await apiRequest<BackendProductDetail>(
-    `/catalog/products/${slug}/`,
-  );
-  return mapBackendProductDetail(response);
+  const { data, error } = await getSupabaseClient()
+    .from("products")
+    .select(
+      "id, name, slug, description, price, stock, flavor, color, scent, size, is_featured, is_active, category:categories(name, slug), images:product_images(original_image, processed_image, is_primary)",
+    )
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Product not found.");
+  }
+
+  return mapSupabaseProduct(data);
 }
 
 export async function createWhatsAppOrder(
   payload: WhatsAppOrderPayload,
 ): Promise<WhatsAppOrderResponse> {
-  return apiRequest<WhatsAppOrderResponse>("/orders/whatsapp/", {
-    method: "POST",
-    body: JSON.stringify(payload),
+  if (!WHATSAPP_ORDER_NUMBER) {
+    throw new Error(
+      "Missing VITE_WHATSAPP_ORDER_NUMBER. Add your WhatsApp number to checkout.",
+    );
+  }
+
+  if (!Array.isArray(payload.items) || payload.items.length === 0) {
+    throw new Error("Cart is empty.");
+  }
+
+  const normalizedItems = payload.items.map((item) => {
+    const quantity = Math.max(0, Number(item.quantity || 0));
+    const price = Math.max(0, Number(item.price || 0));
+    const name = String(item.name || "").trim();
+
+    if (!name || quantity <= 0) {
+      throw new Error("Invalid checkout item.");
+    }
+
+    return { name, quantity, price };
   });
+
+  const subtotal = normalizedItems.reduce(
+    (sum, item) => sum + item.quantity * item.price,
+    0,
+  );
+
+  return {
+    order_id: `local-${Date.now()}`,
+    whatsapp_url: buildOrderWhatsappUrl(
+      {
+        ...payload,
+        items: normalizedItems,
+      },
+      subtotal,
+    ),
+    subtotal,
+    item_count: normalizedItems.reduce((sum, item) => sum + item.quantity, 0),
+  };
 }

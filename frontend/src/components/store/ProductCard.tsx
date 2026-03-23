@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 import type { Product } from "@/data/products";
 
 interface ProductCardProps {
@@ -61,7 +61,9 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             {product.name}
           </h3>
         </Link>
-        <p className="font-body text-xs text-muted-foreground mb-1.5">{product.category}</p>
+        <p className="font-body text-xs text-muted-foreground mb-1.5">
+          {product.category}
+        </p>
         <p className="font-body text-sm font-medium text-foreground">
           R{product.price.toFixed(2)}
         </p>

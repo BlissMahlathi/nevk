@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Search, ShoppingBag, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 import logo from "@/assets/logo.webp";
 
 const navLinks = [
@@ -55,7 +55,11 @@ const Header = () => {
 
         {/* Icons */}
         <div className="flex items-center gap-5">
-          <Link to="/shop" className="text-foreground/70 hover:text-foreground transition-colors" aria-label="Search">
+          <Link
+            to="/shop"
+            className="text-foreground/70 hover:text-foreground transition-colors"
+            aria-label="Search"
+          >
             <Search size={18} />
           </Link>
           <button

@@ -11,7 +11,7 @@ import {
   useProductDetailQuery,
   useProductsQuery,
 } from "@/hooks/useCatalog";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 import { absoluteUrl } from "@/lib/seo";
 
 const ProductDetails = () => {

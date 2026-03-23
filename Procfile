@@ -1,0 +1,1 @@
+web: sh -c "python backend/manage.py migrate --noinput && python backend/manage.py collectstatic --noinput && gunicorn --chdir backend --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-3} config.wsgi:application"

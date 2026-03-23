@@ -14,6 +14,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
         ]
 
     def get_display_image(self, obj):
+        """Return the preferred image URL, prioritizing processed assets."""
         request = self.context.get("request")
         image = obj.processed_image if obj.processed_image else obj.original_image
         if image and request:
@@ -22,6 +23,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Category serializer including active product count."""
     product_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -30,6 +32,7 @@ class CategorySerializer(serializers.ModelSerializer):
                   "is_active", "product_count"]
 
     def get_product_count(self, obj):
+        """Use annotated count if present, otherwise query active products."""
         annotated_count = getattr(obj, "product_count", None)
         if annotated_count is not None:
             return annotated_count
@@ -55,6 +58,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         ]
 
     def get_primary_image(self, obj):
+        """Return the best available product image URL for list views."""
         request = self.context.get("request")
         img_obj = (
             obj.images.filter(is_primary=True).first()

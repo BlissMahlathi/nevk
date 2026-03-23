@@ -18,6 +18,19 @@ def health_check(request):
     return Response({"message": "Backend is working"})
 
 
+@api_view(["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"])
+@permission_classes([AllowAny])
+def catalog_archived(request, subpath=""):
+    return Response(
+        {
+            "detail": "Django catalog endpoints are archived. Use Supabase for catalog data.",
+            "replacement": "supabase",
+            "path": subpath,
+        },
+        status=status.HTTP_410_GONE,
+    )
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @throttle_classes([CheckoutRateThrottle])

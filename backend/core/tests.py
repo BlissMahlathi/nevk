@@ -72,3 +72,10 @@ class CoreApiTests(TestCase):
             response.json(),
             {"detail": "items must be a non-empty list."},
         )
+
+    def test_catalog_endpoints_are_archived(self):
+        response = self.client.get("/api/catalog/products/")
+
+        self.assertEqual(response.status_code, 410)
+        self.assertEqual(response.json()["replacement"], "supabase")
+        self.assertEqual(response["Cache-Control"], "no-store")

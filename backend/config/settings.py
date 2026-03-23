@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+import dj_database_url
 from decouple import config, Csv
 from django.core.exceptions import ImproperlyConfigured
 
@@ -20,8 +21,10 @@ DEFAULT_LOCAL_FRONTEND_ORIGINS = ",".join(
     ]
 )
 
-TRUE_VALUES = {"1", "true", "t", "yes", "y", "on", "debug", "development", "dev"}
-FALSE_VALUES = {"0", "false", "f", "no", "n", "off", "release", "production", "prod"}
+TRUE_VALUES = {"1", "true", "t", "yes", "y",
+               "on", "debug", "development", "dev"}
+FALSE_VALUES = {"0", "false", "f", "no", "n",
+                "off", "release", "production", "prod"}
 
 
 def env_bool(name, default=False):
@@ -40,6 +43,14 @@ def env_bool(name, default=False):
     )
 
 
+def env_csv(name, default=""):
+    return [
+        item.strip()
+        for item in config(name, default=default, cast=Csv())
+        if str(item).strip()
+    ]
+
+
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = env_bool("DEBUG", default=False)
 
@@ -47,7 +58,7 @@ DEBUG = env_bool("DEBUG", default=False)
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # Add hosts from env
-env_hosts = config("ALLOWED_HOSTS", default="", cast=Csv())
+env_hosts = env_csv("ALLOWED_HOSTS")
 for host in env_hosts:
     host = host.strip()
     if host and host not in ALLOWED_HOSTS:
@@ -58,17 +69,30 @@ render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if render_host and render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_host)
 
+# Add hostnames exposed by common hosting providers.
+platform_hosts = [
+    os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip(),
+    os.environ.get("APP_HOSTNAME", "").strip(),
+]
+for platform_host in platform_hosts:
+    if platform_host and platform_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(platform_host)
+
+fly_app_name = os.environ.get("FLY_APP_NAME", "").strip()
+if fly_app_name:
+    fly_host = f"{fly_app_name}.fly.dev"
+    if fly_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(fly_host)
+
+heroku_app_name = os.environ.get("HEROKU_APP_NAME", "").strip()
+if heroku_app_name:
+    heroku_host = f"{heroku_app_name}.herokuapp.com"
+    if heroku_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(heroku_host)
+
 ADMIN_URL = config("ADMIN_URL", default="secure-admin/").strip("/") + "/"
-ADMIN_ALLOWED_IPS = [
-    ip.strip()
-    for ip in config("ADMIN_ALLOWED_IPS", default="", cast=Csv())
-    if ip.strip()
-]
-ADMIN_ALLOWED_HOSTS = [
-    host.strip()
-    for host in config("ADMIN_ALLOWED_HOSTS", default="", cast=Csv())
-    if host.strip()
-]
+ADMIN_ALLOWED_IPS = env_csv("ADMIN_ALLOWED_IPS")
+ADMIN_ALLOWED_HOSTS = env_csv("ADMIN_ALLOWED_HOSTS")
 
 if not DEBUG and not ALLOWED_HOSTS:
     raise ImproperlyConfigured(
@@ -79,18 +103,24 @@ CORS_ALLOWED_ORIGINS = config(
     default=DEFAULT_LOCAL_FRONTEND_ORIGINS,
     cast=Csv(),
 )
+CORS_ALLOWED_ORIGINS = [origin.strip()
+                        for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
 
 CORS_ALLOWED_ORIGIN_REGEXES = config(
     "CORS_ALLOWED_ORIGIN_REGEXES",
     default="",
     cast=Csv(),
 )
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    regex.strip() for regex in CORS_ALLOWED_ORIGIN_REGEXES if regex.strip()]
 
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
     default=DEFAULT_LOCAL_FRONTEND_ORIGINS,
     cast=Csv(),
 )
+CSRF_TRUSTED_ORIGINS = [origin.strip()
+                        for origin in CSRF_TRUSTED_ORIGINS if origin.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -149,6 +179,14 @@ DATABASES = {
         "CONN_MAX_AGE": config("DB_CONN_MAX_AGE", default=60, cast=int),
     }
 }
+
+database_url = config("DATABASE_URL", default="").strip()
+if database_url:
+    DATABASES["default"] = dj_database_url.parse(
+        database_url,
+        conn_max_age=config("DB_CONN_MAX_AGE", default=60, cast=int),
+        ssl_require=env_bool("DB_SSL_REQUIRE", default=not DEBUG),
+    )
 
 if RUNNING_TESTS:
     DATABASES["default"] = {
@@ -220,5 +258,6 @@ if RUNNING_TESTS:
 
 WHATSAPP_ORDER_NUMBER = config("WHATSAPP_ORDER_NUMBER", default="")
 BG_REMOVAL_SERVICE_URL = config("BG_REMOVAL_SERVICE_URL", default="").strip()
-BG_REMOVAL_SERVICE_TOKEN = config("BG_REMOVAL_SERVICE_TOKEN", default="").strip()
+BG_REMOVAL_SERVICE_TOKEN = config(
+    "BG_REMOVAL_SERVICE_TOKEN", default="").strip()
 BG_REMOVAL_TIMEOUT = config("BG_REMOVAL_TIMEOUT", default=25, cast=float)

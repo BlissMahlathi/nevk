@@ -12,7 +12,15 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,8 +30,16 @@ const App = () => (
         <BrowserRouter>
           <Suspense
             fallback={
-              <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
-                Loading...
+              <div className="min-h-screen bg-background px-6 py-16 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">
+                    Nevk Cosmetics
+                  </p>
+                  <div className="w-10 h-10 rounded-full border-2 border-primary/40 border-t-primary animate-spin mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Loading the experience...
+                  </p>
+                </div>
               </div>
             }
           >
