@@ -1,6 +1,7 @@
 type FrontendEnv = {
   VITE_SUPABASE_URL?: string;
   VITE_SUPABASE_ANON_KEY?: string;
+  VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY?: string;
   VITE_SUPABASE_PRODUCTS_BUCKET?: string;
   VITE_WHATSAPP_ORDER_NUMBER?: string;
   VITE_USE_FALLBACK_CATALOG?: string;
@@ -26,7 +27,9 @@ export function normalizeWhatsAppNumber(value: string | undefined) {
 
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.trim() || "";
 export const SUPABASE_ANON_KEY =
-  import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || "";
+  import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY?.trim() ||
+  "";
 export const SUPABASE_PRODUCTS_BUCKET =
   import.meta.env.VITE_SUPABASE_PRODUCTS_BUCKET?.trim() || "products";
 export const WHATSAPP_ORDER_NUMBER =

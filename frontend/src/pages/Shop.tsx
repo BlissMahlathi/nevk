@@ -82,6 +82,11 @@ const Shop = () => {
     return result;
   }, [activeCategory, productsData, searchQuery, sortBy]);
 
+  const catalogErrorMessage =
+    (productsError as Error | null)?.message ||
+    (categoriesError as Error | null)?.message ||
+    "Could not load live catalog. Check VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY), and Supabase RLS policies.";
+
   return (
     <Layout>
       <Seo
@@ -162,8 +167,7 @@ const Shop = () => {
 
         {(productsError || categoriesError) && !USE_FALLBACK_CATALOG && (
           <p className="text-center text-red-600 text-body text-xs mb-8">
-            Could not load live catalog. Check VITE_SUPABASE_URL,
-            VITE_SUPABASE_ANON_KEY, and Supabase RLS policies.
+            {catalogErrorMessage}
           </p>
         )}
 
