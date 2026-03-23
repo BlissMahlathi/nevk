@@ -20,7 +20,7 @@ class Command(BaseCommand):
             help="Directory to write export files into. Defaults to backend/exports/supabase-catalog-<timestamp>/",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *_args, **options):
         output_dir = options["output_dir"].strip()
         if output_dir:
             target_dir = Path(output_dir).resolve()

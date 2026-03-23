@@ -1,0 +1,4 @@
+id,product_id,original_image,processed_image,alt_text,is_primary,created_at
+1,1,products/raw/nude-gloss.jpg,products/processed/nude-gloss-processed.webp,picb,False,2026-03-16T06:56:56.118184+00:00
+2,1,products/raw/lipgloss.webp,products/processed/lipgloss-processed.webp,pics,False,2026-03-16T09:41:53.440801+00:00
+3,2,products/raw/lipgloss.png,products/processed/lipgloss-processed_0bHIP0o.webp,lipglosses,True,2026-03-16T09:46:47.422297+00:00

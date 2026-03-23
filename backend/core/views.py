@@ -14,13 +14,13 @@ from .throttles import CheckoutRateThrottle, HealthRateThrottle
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @throttle_classes([HealthRateThrottle])
-def health_check(request):
+def health_check(_request):
     return Response({"message": "Backend is working"})
 
 
 @api_view(["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"])
 @permission_classes([AllowAny])
-def catalog_archived(request, subpath=""):
+def catalog_archived(_request, subpath=""):
     return Response(
         {
             "detail": "Django catalog endpoints are archived. Use Supabase for catalog data.",

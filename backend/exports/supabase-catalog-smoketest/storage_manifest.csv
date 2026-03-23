@@ -1,0 +1,7 @@
+source_path,target_path,image_variant
+products/raw/nude-gloss.jpg,products/raw/nude-gloss.jpg,original
+products/processed/nude-gloss-processed.webp,products/processed/nude-gloss-processed.webp,processed
+products/raw/lipgloss.webp,products/raw/lipgloss.webp,original
+products/processed/lipgloss-processed.webp,products/processed/lipgloss-processed.webp,processed
+products/raw/lipgloss.png,products/raw/lipgloss.png,original
+products/processed/lipgloss-processed_0bHIP0o.webp,products/processed/lipgloss-processed_0bHIP0o.webp,processed

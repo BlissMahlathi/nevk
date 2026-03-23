@@ -1,0 +1,3 @@
+id,category_id,name,slug,description,price,stock,flavor,color,scent,size,is_featured,is_active,created_at,updated_at
+1,1,lips,lips,,250.00,5,mint,pink,mint,30ml,True,True,2026-03-16T06:56:15.906969+00:00,2026-03-16T09:44:24.836997+00:00
+2,1,lip sticks,lip-sticks,,200.00,2,mint,"pink, red , blue, white",choco,30ml,True,True,2026-03-16T09:46:47.402247+00:00,2026-03-16T09:46:47.402342+00:00
