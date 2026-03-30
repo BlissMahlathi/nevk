@@ -118,9 +118,15 @@ function resolveSupabaseImageUrl(value: string | null | undefined) {
   }
 
   const normalizedPath = trimmed.replace(/^\//, "");
+  const bucketPrefix = `${SUPABASE_PRODUCTS_BUCKET}/`;
+  // Export/import datasets may store object paths with the bucket name included.
+  // Supabase storage APIs expect the path relative to the selected bucket.
+  const objectPath = normalizedPath.startsWith(bucketPrefix)
+    ? normalizedPath.slice(bucketPrefix.length)
+    : normalizedPath;
   const { data } = getSupabaseClient()
     .storage.from(SUPABASE_PRODUCTS_BUCKET)
-    .getPublicUrl(normalizedPath);
+    .getPublicUrl(objectPath);
   return data.publicUrl || trimmed;
 }
 
