@@ -1,7 +1,9 @@
 from urllib.parse import quote
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 from django.conf import settings
+from django.http import FileResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
@@ -9,6 +11,22 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Order, OrderItem
 from .throttles import CheckoutRateThrottle, HealthRateThrottle
+
+
+def spa_fallback(request):
+    frontend_app_url = getattr(settings, "FRONTEND_APP_URL", "")
+    if frontend_app_url:
+        query_string = request.META.get("QUERY_STRING", "")
+        suffix = f"?{query_string}" if query_string else ""
+        return HttpResponseRedirect(f"{frontend_app_url}{request.path}{suffix}")
+
+    frontend_index = settings.BASE_DIR.parent / "frontend" / "dist" / "index.html"
+    if Path(frontend_index).is_file():
+        return FileResponse(open(frontend_index, "rb"), content_type="text/html")
+
+    return HttpResponseNotFound(
+        "Frontend route not found. Set FRONTEND_APP_URL or deploy frontend/dist with this service."
+    )
 
 
 @api_view(["GET"])

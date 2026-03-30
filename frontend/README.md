@@ -12,6 +12,14 @@ npm run dev
 
 The dev server runs on `http://localhost:8080` and reads catalog data directly from Supabase.
 
+## Production Routing Note
+
+This app uses client-side routing (`BrowserRouter`), so direct reloads on routes like `/shop`
+must be rewritten to `/index.html` by the hosting platform.
+
+- Netlify/Cloudflare Pages: uses `public/_redirects`.
+- Vercel: uses `vercel.json` (`routes` with `handle: filesystem` and fallback to `/index.html`).
+
 ## Environment Variables
 
 - `VITE_SUPABASE_URL`

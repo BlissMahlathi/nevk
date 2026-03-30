@@ -108,6 +108,7 @@ Detailed backend hardening still applies from [backend/DEPLOYMENT.md](backend/DE
 Backend production env:
 
 - Required: `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `WHATSAPP_ORDER_NUMBER`
+- Recommended when frontend is hosted separately: `FRONTEND_APP_URL=https://<your-frontend-domain>` to redirect unknown non-API routes (for example `/shop`) instead of returning backend 404.
 - Required when using Postgres: `DB_ENGINE`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
 - Alternative for managed hosts: `DATABASE_URL` (takes precedence over `DB_*`), optionally `DB_SSL_REQUIRE=True`
 - Recommended hardening: `ADMIN_URL`, `ADMIN_ALLOWED_HOSTS`, `ADMIN_ALLOWED_IPS`, `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_HSTS_SECONDS`, `SECURE_HSTS_INCLUDE_SUBDOMAINS`, `SECURE_HSTS_PRELOAD`, `SECURE_REFERRER_POLICY`, `X_FRAME_OPTIONS`, `WHITENOISE_MAX_AGE`

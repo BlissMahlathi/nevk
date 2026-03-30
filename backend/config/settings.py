@@ -257,6 +257,7 @@ if RUNNING_TESTS:
     SECURE_HSTS_PRELOAD = False
 
 WHATSAPP_ORDER_NUMBER = config("WHATSAPP_ORDER_NUMBER", default="")
+FRONTEND_APP_URL = config("FRONTEND_APP_URL", default="").strip().rstrip("/")
 BG_REMOVAL_SERVICE_URL = config("BG_REMOVAL_SERVICE_URL", default="").strip()
 BG_REMOVAL_SERVICE_TOKEN = config(
     "BG_REMOVAL_SERVICE_TOKEN", default="").strip()

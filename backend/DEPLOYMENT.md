@@ -70,6 +70,7 @@ Use this when you want to move away from the current host quickly.
 - Set `ADMIN_URL` to a non-default value (not `admin/`) in production.
 - Optionally set `ADMIN_ALLOWED_HOSTS` and/or `ADMIN_ALLOWED_IPS` to restrict admin access.
 - Set `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` to your frontend origin(s).
+- If frontend is hosted on a separate domain, set `FRONTEND_APP_URL=https://<frontend-domain>` so non-API paths like `/shop` redirect to the frontend app instead of 404.
 - Use PostgreSQL (`DB_ENGINE=django.db.backends.postgresql`) with strong credentials.
 - On managed providers, prefer `DATABASE_URL` (optionally `DB_SSL_REQUIRE=True`) instead of separate `DB_*` values.
 - Set `WHATSAPP_ORDER_NUMBER` in international digits format (example: `27731234567`).
