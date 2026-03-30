@@ -80,7 +80,6 @@ const HeroSection = () => {
               width={1536}
               height={1024}
               decoding="async"
-              fetchPriority="high"
             />
           </picture>
         </div>
